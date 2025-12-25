@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin - Streaming</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>Admin Panel</h1>
+    <div class="toolbar">
+      <a class="adminLink" href="/">Kembali</a>
+      <button id="logoutUserBtn">Logout User</button>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <h2>Login</h2>
+      <div class="row">
+        <input id="pw" type="password" placeholder="Admin password" />
+        <button id="loginBtn" class="primary">Login</button>
+      </div>
+      <p id="loginMsg" class="muted"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Tambah Video</h2>
+
+      <div class="formGrid">
+        <input id="title" placeholder="Judul" />
+        <select id="type">
+          <option value="anime">Anime</option>
+          <option value="donghua">Donghua</option>
+          <option value="drakor">Drakor</option>
+        </select>
+
+        <select id="genre">
+          <option>Action</option><option>Comedy</option><option>Romance</option><option>Drama</option>
+          <option>Fantasy</option><option>Slice of Life</option><option>Thriller</option><option>Mystery</option>
+        </select>
+
+        <input id="episode" placeholder="Episode/Part (mis. 1 / 12 / Part 2)" />
+        <input id="thumbUrl" placeholder="Link foto thumbnail (URL)" />
+        <textarea id="description" placeholder="Deskripsi singkat"></textarea>
+
+        <div class="uploadBox">
+          <label>Upload file video (mp4/webm)</label>
+          <input id="videoFile" type="file" accept="video/*" />
+          <button id="uploadBtn">Upload ke Storage</button>
+          <p id="uploadMsg" class="muted"></p>
+          <input id="videoUrl" placeholder="Video URL (otomatis terisi setelah upload)" readonly />
+        </div>
+
+        <button id="saveBtn" class="primary">Simpan ke MongoDB</button>
+        <p id="saveMsg" class="muted"></p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Manajemen Konten</h2>
+      <button id="reloadList">Muat Daftar</button>
+      <div id="list" class="list"></div>
+    </section>
+  </main>
+
+  <script type="module" src="/admin.js"></script>
+</body>
+</html>

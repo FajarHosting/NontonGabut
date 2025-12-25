@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Login</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="container">
+    <h1>Login / Registrasi</h1>
+    <p class="muted">Wajib login untuk menonton. Bisa Google (Gmail) atau Email/Password.</p>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <h2>Login Google</h2>
+      <button id="googleBtn" class="primary">Login dengan Google</button>
+      <p id="googleMsg" class="muted"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Email / Password</h2>
+      <div class="formGrid">
+        <input id="email" placeholder="Email" />
+        <input id="password" type="password" placeholder="Password" />
+        <div class="row">
+          <button id="loginEmailBtn" class="primary">Login</button>
+          <button id="registerBtn">Registrasi</button>
+        </div>
+        <p id="emailMsg" class="muted"></p>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="/auth.js"></script>
+</body>
+</html>
