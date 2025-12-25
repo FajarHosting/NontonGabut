@@ -2,91 +2,62 @@
 <html lang="id">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>NontonGabut</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <link rel="stylesheet" href="/css/style.css" />
+  <title>NontonGabut — Jelajah Konten</title>
 </head>
 <body>
   <div class="container">
-
-    <div class="nav">
-      <div class="brand">
-        <img src="/assets/logo.svg" alt="Logo" />
-        <div>
-          NontonGabut
-          <div class="card-sub">Anime • Donghua • Drakor • Dracin</div>
+    <header class="nav">
+      <a class="brand" href="/index.html" aria-label="NontonGabut">
+        <img class="brand-logo" src="/assets/logo.svg" alt="NontonGabut" />
+        <div class="brand-text">
+          <div class="brand-title">NontonGabut</div>
+          <div class="brand-sub">Anime • Donghua • Drakor • Dracin</div>
         </div>
-      </div>
+      </a>
 
-      <div class="top-actions">
+      <div class="nav-right">
         <span id="subBadge" class="badge">Loading...</span>
-        <a class="btn ghost" href="/profile.html" title="Profil">Profil</a>
-        <button id="btnLogout" class="btn danger">Logout</button>
+        <a class="link" href="/profile.html">Profil</a>
+        <button id="btnLogout" class="btn btn-ghost" type="button">Logout</button>
       </div>
-    </div>
+    </header>
 
-    <div class="card">
-      <div class="card-header">
-        <div>
-          <div class="card-title">Jelajah Konten</div>
-          <div class="card-sub">Pilih kategori & genre, lalu cari judul.</div>
-        </div>
-      </div>
+    <section class="card">
+      <div class="card-title">Jelajah Konten</div>
+      <div class="muted">Pilih kategori & genre, lalu cari judul.</div>
 
       <div class="filters">
-  <select id="category-filter">
-    <option value="all">Semua Kategori</option>
-    <option value="anime">Anime</option>
-    <option value="donghua">Donghua</option>
-    <option value="drakor">Drakor</option>
-    <option value="dracin">Dracin</option>
-  </select>
+        <select id="cat" class="input">
+          <option value="">Semua Kategori</option>
+        </select>
 
-  <select id="genre-filter">
-    <option value="all">Semua Genre</option>
-    <option value="action">Action</option>
-    <option value="romance">Romance</option>
-    <option value="comedy">Comedy</option>
-    <option value="fantasy">Fantasy</option>
-    <option value="thriller">Thriller</option>
-  </select>
+        <select id="genre" class="input">
+          <option value="">Semua Genre</option>
+        </select>
 
-  <input id="search" placeholder="Cari judul...">
-</div>
-
-<div id="film-list" class="grid"></div>
-
-          <div class="col-6">
-            <label class="small">Cari Judul</label>
-            <input id="q" class="input" placeholder="Contoh: Solo Leveling, The Glory, ..." />
-          </div>
-
-          <div class="col-12">
-            <div class="hr"></div>
-            <label class="small">Genre (klik untuk pilih)</label>
-            <div id="genreChips" class="row" style="margin-top:10px"></div>
-          </div>
-
-          <div class="col-12">
-            <div class="hr"></div>
-            <div class="row" style="justify-content:space-between;align-items:center">
-              <div class="small" id="countInfo">0 judul</div>
-              <button class="btn ghost" id="btnReset">Reset Filter</button>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div id="grid" class="grid"></div>
-          </div>
-
-        </div>
+        <input id="q" class="input" type="search" placeholder="Cari judul..." />
+        <button id="btnSearch" class="btn" type="button">Cari</button>
+        <button id="btnReset" class="btn btn-ghost" type="button">Reset</button>
       </div>
-    </div>
+    </section>
 
+    <section class="section">
+      <div class="section-head">
+        <div class="section-title">Daftar Series</div>
+        <div class="muted"><span id="count">0</span> judul</div>
+      </div>
+
+      <div id="film-list" class="grid"></div>
+    </section>
+
+    <footer class="footer muted">
+      © NontonGabut — demo project
+    </footer>
   </div>
 
-  <script src="/js/guard.js"></script>
-  <script src="/js/api.js"></script>
-  <script src="/js/app.js"></script>
+  <!-- PENTING: app.js itu module (pakai import), jadi harus type="module" -->
+  <script type="module" src="/js/app.js"></script>
 </body>
 </html>
