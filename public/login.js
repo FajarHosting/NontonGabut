@@ -1,5 +1,28 @@
 // public/login.js
-import { firebaseConfig } from "/firebase-config.js";
+// public/login.js
+import { firebaseConfig } from "./firebase-config.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import {
+  getAuth,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+// Fail-fast biar kalau config kosong langsung kelihatan
+if (!firebaseConfig?.apiKey || String(firebaseConfig.apiKey).includes("ISI_")) {
+  const msgEl = document.getElementById("msg");
+  if (msgEl) {
+    msgEl.textContent = "Firebase config belum diisi. Cek file firebase-config.js";
+    msgEl.className = "hint";
+  }
+  throw new Error("Firebase config missing/placeholder");
+}
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
