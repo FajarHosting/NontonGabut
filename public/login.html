@@ -3,36 +3,50 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login</title>
+  <title>Login - NontonGabut</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
-  <header class="container">
-    <h1>Login / Registrasi</h1>
-    <p class="muted">Wajib login untuk menonton. Bisa Google (Gmail) atau Email/Password.</p>
-  </header>
+  <main class="authShell">
+    <section class="authCard">
+      <div class="authHeader">
+        <h1>Masuk ke NontonGabut</h1>
+        <p class="muted">Login dulu sebelum bisa masuk menu streaming.</p>
+      </div>
 
-  <main class="container">
-    <section class="panel">
-      <h2>Login Google</h2>
-      <button id="googleBtn" class="primary">Login dengan Google</button>
-      <p id="googleMsg" class="muted"></p>
-    </section>
+      <div class="authGrid">
+        <label class="field">
+          <span>Email</span>
+          <input id="email" type="email" placeholder="contoh@email.com" autocomplete="email" />
+        </label>
 
-    <section class="panel">
-      <h2>Email / Password</h2>
-      <div class="formGrid">
-        <input id="email" placeholder="Email" />
-        <input id="password" type="password" placeholder="Password" />
+        <label class="field">
+          <span>Password</span>
+          <input id="password" type="password" placeholder="Minimal 6 karakter" autocomplete="current-password" />
+        </label>
+
         <div class="row">
-          <button id="loginEmailBtn" class="primary">Login</button>
-          <button id="registerBtn">Registrasi</button>
+          <button id="loginEmailBtn" class="btn primary" type="button">Login</button>
+          <button id="registerBtn" class="btn" type="button">Registrasi</button>
         </div>
-        <p id="emailMsg" class="muted"></p>
+
+        <p id="msg" class="hint"></p>
+
+        <div class="divider"><span>atau</span></div>
+
+        <!-- Google button DI BAWAH sesuai permintaan -->
+        <button id="googleBtn" class="btn google" type="button">
+          <span class="gDot"></span>
+          Login dengan Google
+        </button>
+
+        <p class="foot muted">
+          Dengan login, Anda setuju untuk menggunakan aplikasi ini secara bertanggung jawab.
+        </p>
       </div>
     </section>
   </main>
 
-  <script type="module" src="/auth.js"></script>
+  <script type="module" src="/login.js"></script>
 </body>
 </html>

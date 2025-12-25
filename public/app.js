@@ -1,3 +1,5 @@
+// public/app.js
+import { firebaseConfig } from "/firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
@@ -5,18 +7,10 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-// WAJIB samakan dengan public/auth.js
-const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "ISI_AUTH_DOMAIN",
-  projectId: "ISI_PROJECT_ID",
-  appId: "ISI_APP_ID"
-};
-
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 
-const logoutUserBtn = document.getElementById("logoutUserBtn");
+const logoutBtn = document.getElementById("logoutBtn");
 
 const grid = document.getElementById("grid");
 const player = document.getElementById("player");
@@ -32,20 +26,20 @@ const refreshBtn = document.getElementById("refreshBtn");
 const closePlayer = document.getElementById("closePlayer");
 
 let state = { type: "", genre: "", q: "" };
-let ready = false;
+let started = false;
 
 onAuthStateChanged(auth, (user) => {
   if (!user) {
     window.location.href = "/login.html";
     return;
   }
-  if (!ready) {
-    ready = true;
+  if (!started) {
+    started = true;
     load();
   }
 });
 
-logoutUserBtn?.addEventListener("click", async () => {
+logoutBtn?.addEventListener("click", async () => {
   await signOut(auth);
   window.location.href = "/login.html";
 });
@@ -96,7 +90,7 @@ function cardHtml(x) {
         </div>
         <h3 class="title">${escapeHtml(x.title)}</h3>
         <p class="muted clamp2">${escapeHtml(x.description || "")}</p>
-        <button class="primary" data-watch="1" data-json="${safeJson}" ${x.videoUrl ? "" : "disabled"}>
+        <button class="btn primary" data-watch="1" data-json="${safeJson}" ${x.videoUrl ? "" : "disabled"}>
           ${x.videoUrl ? "Tonton" : "Video belum tersedia"}
         </button>
       </div>

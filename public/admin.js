@@ -1,3 +1,5 @@
+// public/admin.js
+import { firebaseConfig } from "/firebase-config.js";
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
@@ -5,24 +7,9 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-// WAJIB samakan dengan auth.js
-const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "ISI_AUTH_DOMAIN",
-  projectId: "ISI_PROJECT_ID",
-  appId: "ISI_APP_ID"
-};
-
 const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 
-const logoutUserBtn = document.getElementById("logoutUserBtn");
-logoutUserBtn?.addEventListener("click", async () => {
-  await signOut(auth);
-  window.location.href = "/login.html";
-});
-
-// Guard: admin page wajib login dulu
 let userReady = false;
 onAuthStateChanged(auth, (user) => {
   if (!user) {
@@ -65,7 +52,7 @@ function setToken(t) {
 
 async function loginAdmin() {
   if (!userReady) {
-    loginMsg.textContent = "Anda belum login user. Redirect...";
+    loginMsg.textContent = "Anda belum login. Redirect...";
     window.location.href = "/login.html";
     return;
   }
@@ -106,7 +93,6 @@ async function requestBlobToken(filename, contentType) {
   return data;
 }
 
-// Upload video via direct-to-storage
 async function uploadVideo() {
   uploadMsg.textContent = "";
   if (!getToken()) {
@@ -164,8 +150,8 @@ async function saveToDb() {
     genre: genreEl.value,
     episode: episodeEl.value.trim(),
     description: descEl.value.trim(),
-    thumbUrl: thumbEl.value.trim(),   // foto via link
-    videoUrl: videoUrl.value.trim(),  // url blob
+    thumbUrl: thumbEl.value.trim(),
+    videoUrl: videoUrl.value.trim(),
     isActive: true
   };
 
@@ -204,7 +190,7 @@ async function loadList() {
         <div class="muted">${(x.type || "").toUpperCase()} • ${escapeHtml(x.genre || "-")} ${x.episode ? "• Ep " + escapeHtml(x.episode) : ""}</div>
       </div>
       <div class="actions">
-        <button data-disable="${x.id}">Nonaktifkan</button>
+        <button class="btn small" data-disable="${x.id}">Nonaktifkan</button>
       </div>
     </div>
   `).join("");
