@@ -1,15 +1,14 @@
 {
-  "name": "my-streaming-web",
+  "name": "nonton-gabut",
   "private": true,
+  "type": "module",
   "scripts": {
-    "dev": "next dev -p 3000",
-    "build": "next build",
-    "start": "next start -p 3000"
+    "build": "echo \"No build required\"",
+    "start": "node -e \"console.log('Static + Serverless API on Vercel')\""
   },
   "dependencies": {
     "@vercel/blob": "^0.27.0",
     "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.6.2",
-    "next": "^14.2.5"
+    "mongodb": "^6.6.2"
   }
 }

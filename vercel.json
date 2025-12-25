@@ -1,3 +1,18 @@
 {
-  "cleanUrls": true
+  "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/index.html", "destination": "/public/index.html" },
+
+    { "source": "/login", "destination": "/public/login.html" },
+    { "source": "/login.html", "destination": "/public/login.html" },
+
+    { "source": "/admin", "destination": "/public/admin.html" },
+    { "source": "/admin.html", "destination": "/public/admin.html" },
+
+    { "source": "/styles.css", "destination": "/public/styles.css" },
+    { "source": "/app.js", "destination": "/public/app.js" },
+    { "source": "/admin.js", "destination": "/public/admin.js" },
+    { "source": "/login.js", "destination": "/public/login.js" },
+    { "source": "/firebase-config.js", "destination": "/public/firebase-config.js" }
+  ]
 }
