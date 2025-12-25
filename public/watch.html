@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Watch</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbarInner">
+      <a class="btn small" href="./index.html">← Menu</a>
+      <div class="topActions">
+        <a class="avatar" href="./profile.html" id="avatar">U</a>
+        <button class="btn small" id="btnLogout">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <div class="row" style="justify-content:space-between;">
+        <div>
+          <h2 style="margin:0;">Daftar Episode</h2>
+          <div class="muted small" id="gateInfo"></div>
+        </div>
+        <a class="btn primary" href="./profile.html#subscribe">Berlangganan</a>
+      </div>
+      <div id="episodes" class="epList" style="margin-top:10px;"></div>
+    </section>
+
+    <section class="panel" id="playerPanel" style="display:none;">
+      <div class="row" style="justify-content:space-between;">
+        <div style="font-weight:900;" id="epTitle">Episode</div>
+        <span class="muted small" id="status"></span>
+      </div>
+      <video id="video" controls playsinline></video>
+    </section>
+  </main>
+
+  <script type="module" src="./watch.js"></script>
+</body>
+</html>

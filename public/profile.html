@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profil</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbarInner">
+      <a class="btn small" href="./index.html">← Menu</a>
+      <div class="topActions">
+        <span class="avatar" id="avatar">U</span>
+        <button class="btn small" id="btnLogout">Logout</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="panel">
+      <h2 style="margin:0 0 8px;">Profil</h2>
+      <div class="row">
+        <div style="font-weight:900;" id="email">-</div>
+        <div class="muted small" id="subStatus">-</div>
+      </div>
+    </section>
+
+    <section class="panel" id="subscribe">
+      <h2 style="margin:0 0 8px;">Berlangganan</h2>
+      <div class="muted small" style="margin-bottom:10px;">
+        Paket: 1 Minggu / 1 Bulan / 1 Tahun. Pembayaran via DANA / QRIS / SeaBank. Setelah bayar, kirim bukti → admin approve.
+      </div>
+
+      <div class="panel" style="background:rgba(11,15,23,.25);">
+        <div class="row" style="justify-content:space-between;">
+          <div>
+            <div style="font-weight:900;">DANA</div>
+            <div class="muted small">Nomor: <span id="danaNo">-</span></div>
+          </div>
+          <div>
+            <div style="font-weight:900;">SeaBank</div>
+            <div class="muted small">Rekening: <span id="seaNo">-</span></div>
+          </div>
+        </div>
+        <div style="margin-top:10px;">
+          <div style="font-weight:900;">QRIS</div>
+          <img id="qrisImg" alt="QRIS" style="margin-top:8px; width:100%; max-width:360px; border-radius:12px; border:1px solid var(--border);" />
+        </div>
+      </div>
+
+      <div class="panel" style="background:rgba(11,15,23,.25); margin-top:12px;">
+        <div class="row">
+          <select id="plan">
+            <option value="WEEK">1 Minggu</option>
+            <option value="MONTH" selected>1 Bulan</option>
+            <option value="YEAR">1 Tahun</option>
+          </select>
+          <select id="method">
+            <option value="DANA">DANA</option>
+            <option value="QRIS">QRIS</option>
+            <option value="SEABANK">SEABANK</option>
+          </select>
+        </div>
+        <input id="proofUrl" placeholder="Link bukti bayar (foto) — Google Drive/ImgBB/dll" style="margin-top:10px; width:100%;" />
+        <input id="note" placeholder="Catatan (opsional) — nama pengirim/jam transfer" style="margin-top:10px; width:100%;" />
+        <div class="row" style="justify-content:space-between; margin-top:10px;">
+          <button id="btnSubmit" class="btn primary">Kirim Request</button>
+          <span id="msg" class="hint"></span>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="./profile.js"></script>
+</body>
+</html>

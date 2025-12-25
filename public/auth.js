@@ -1,67 +1,73 @@
-// public/auth.js (MODULE)
-import { firebaseConfig } from "/firebase-config.js";
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  getAuth,
-  GoogleAuthProvider,
-  signInWithPopup,
-  signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
-  onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-
-// ID elemen harus ada di login.html Anda
-const googleBtn = document.getElementById("googleBtn");
-const googleMsg = document.getElementById("googleMsg");
+import { API_BASE } from "./config.js";
 
 const emailEl = document.getElementById("email");
-const passwordEl = document.getElementById("password");
-const loginEmailBtn = document.getElementById("loginEmailBtn");
-const registerBtn = document.getElementById("registerBtn");
-const emailMsg = document.getElementById("emailMsg");
+const passEl = document.getElementById("password");
+const msgEl = document.getElementById("msg");
+const btnLogin = document.getElementById("btnLogin");
+const btnRegister = document.getElementById("btnRegister");
 
-function goHome() {
-  window.location.href = "/index.html";
+function setMsg(t, ok=false){
+  msgEl.textContent = t || "";
+  msgEl.className = ok ? "hint ok" : "hint";
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (user) goHome();
-});
+function saveToken(token){
+  localStorage.setItem("token", token);
+}
 
-googleBtn?.addEventListener("click", async () => {
-  if (googleMsg) googleMsg.textContent = "Memproses...";
+function getToken(){
+  return localStorage.getItem("token") || "";
+}
+
+async function api(path, { method="GET", body } = {}){
+  const token = getToken();
+  const r = await fetch(`${API_BASE}${path}`, {
+    method,
+    headers: {
+      "Content-Type":"application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {})
+    },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.error || "Request failed");
+  return data;
+}
+
+// auto redirect kalau token masih valid
+(async () => {
+  const t = getToken();
+  if (!t) return;
   try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-    if (googleMsg) googleMsg.textContent = "Login sukses.";
-    goHome();
+    await api("/api/me");
+    window.location.href = "./index.html";
+  } catch { /* ignore */ }
+})();
+
+btnRegister.addEventListener("click", async () => {
+  setMsg("Memproses registrasi...");
+  try {
+    await api("/api/auth/register", {
+      method: "POST",
+      body: { email: emailEl.value.trim(), password: passEl.value }
+    });
+    setMsg("Registrasi berhasil. Silakan login.", true);
   } catch (e) {
-    if (googleMsg) googleMsg.textContent = "Gagal login Google: " + (e?.message || String(e));
+    setMsg("Registrasi gagal: " + (e?.message || String(e)));
   }
 });
 
-loginEmailBtn?.addEventListener("click", async () => {
-  if (emailMsg) emailMsg.textContent = "Memproses...";
+btnLogin.addEventListener("click", async () => {
+  setMsg("Memproses login...");
   try {
-    await signInWithEmailAndPassword(auth, emailEl.value.trim(), passwordEl.value);
-    if (emailMsg) emailMsg.textContent = "Login sukses.";
-    goHome();
+    const data = await api("/api/auth/login", {
+      method: "POST",
+      body: { email: emailEl.value.trim(), password: passEl.value }
+    });
+    saveToken(data.token);
+    setMsg("Login berhasil.", true);
+    window.location.href = "./index.html";
   } catch (e) {
-    if (emailMsg) emailMsg.textContent = "Login gagal: " + (e?.message || String(e));
-  }
-});
-
-registerBtn?.addEventListener("click", async () => {
-  if (emailMsg) emailMsg.textContent = "Memproses registrasi...";
-  try {
-    await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passwordEl.value);
-    if (emailMsg) emailMsg.textContent = "Registrasi sukses. Anda sudah login.";
-    goHome();
-  } catch (e) {
-    if (emailMsg) emailMsg.textContent = "Registrasi gagal: " + (e?.message || String(e));
+    setMsg("Login gagal: " + (e?.message || String(e)));
   }
 });

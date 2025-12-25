@@ -3,68 +3,107 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin - Streaming</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>Admin</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <header class="container">
-    <h1>Admin Panel</h1>
-    <div class="toolbar">
-      <a class="adminLink" href="/">Kembali</a>
-      <button id="logoutBtn">Logout</button>
+  <header class="topbar">
+    <div class="topbarInner">
+      <a class="btn small" href="./index.html">← Menu</a>
+      <div class="topActions">
+        <span class="avatar" id="avatar">A</span>
+        <button class="btn small" id="btnLogout">Logout</button>
+      </div>
     </div>
   </header>
 
   <main class="container">
     <section class="panel">
-      <h2>Login</h2>
-      <div class="row">
-        <input id="pw" type="password" placeholder="Admin password" />
-        <button id="loginBtn" class="primary">Login</button>
-      </div>
-      <p id="loginMsg" class="muted"></p>
+      <h2 style="margin:0 0 8px;">Admin Panel</h2>
+      <div id="guard" class="muted small">Memeriksa akses admin...</div>
     </section>
 
     <section class="panel">
-      <h2>Tambah Video</h2>
-
-      <div class="formGrid">
-        <input id="title" placeholder="Judul" />
-        <select id="type">
+      <h2 style="margin:0 0 8px;">Buat Series</h2>
+      <div class="row">
+        <input id="sTitle" placeholder="Judul series" style="flex:1;" />
+        <select id="sType">
           <option value="anime">Anime</option>
           <option value="donghua">Donghua</option>
           <option value="drakor">Drakor</option>
         </select>
-
-        <select id="genre">
-          <option>Action</option><option>Comedy</option><option>Romance</option><option>Drama</option>
-          <option>Fantasy</option><option>Slice of Life</option><option>Thriller</option><option>Mystery</option>
-        </select>
-
-        <input id="episode" placeholder="Episode/Part (mis. 1 / 12 / Part 2)" />
-        <input id="thumbUrl" placeholder="Link foto thumbnail (URL)" />
-        <textarea id="description" placeholder="Deskripsi singkat"></textarea>
-
-        <div class="uploadBox">
-          <label>Upload file video (mp4/webm)</label>
-          <input id="videoFile" type="file" accept="video/*" />
-          <button id="uploadBtn">Upload ke Storage</button>
-          <p id="uploadMsg" class="muted"></p>
-          <input id="videoUrl" placeholder="Video URL (otomatis terisi setelah upload)" readonly />
-        </div>
-
-        <button id="saveBtn" class="primary">Simpan ke MongoDB</button>
-        <p id="saveMsg" class="muted"></p>
+        <input id="sGenre" placeholder="Genre" />
+      </div>
+      <input id="sThumb" placeholder="Thumbnail URL (link gambar)" style="width:100%; margin-top:10px;" />
+      <textarea id="sDesc" placeholder="Deskripsi" style="width:100%; margin-top:10px;"></textarea>
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <button class="btn primary" id="btnCreateSeries">Simpan Series</button>
+        <span id="seriesMsg" class="hint"></span>
       </div>
     </section>
 
     <section class="panel">
-      <h2>Manajemen Konten</h2>
-      <button id="reloadList">Muat Daftar</button>
-      <div id="list" class="list"></div>
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;">Daftar Series</h2>
+        <button class="btn small" id="btnReloadSeries">Reload</button>
+      </div>
+      <div id="seriesList" class="list" style="margin-top:10px;"></div>
+    </section>
+
+    <section class="panel">
+      <h2 style="margin:0 0 8px;">Tambah / Update Episode</h2>
+      <div class="muted small">Free limit 10 episode. Di atas itu otomatis terkunci jika “Kunci setelah free limit” aktif.</div>
+
+      <input id="eSeriesId" placeholder="Series ID (klik dari list)" style="width:100%; margin-top:10px;" />
+      <div class="row" style="margin-top:10px;">
+        <input id="eNum" type="number" placeholder="Episode number" />
+        <input id="eTitle" placeholder="Judul episode" style="flex:1;" />
+      </div>
+      <input id="eVideo" placeholder="Video URL (link video)" style="width:100%; margin-top:10px;" />
+      <label class="row" style="margin-top:10px;">
+        <input id="eLockAfterFree" type="checkbox" checked />
+        <span class="muted small">Kunci setelah free limit (default ON)</span>
+      </label>
+      <div class="row" style="justify-content:space-between; margin-top:10px;">
+        <button class="btn primary" id="btnSaveEp">Simpan Episode</button>
+        <span id="epMsg" class="hint"></span>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2 style="margin:0 0 8px;">Kunci Episode Manual</h2>
+      <div class="row">
+        <input id="lSeriesId" placeholder="Series ID" style="flex:1;" />
+        <input id="lNum" type="number" placeholder="Episode" />
+        <button class="btn" id="btnLock">Kunci</button>
+        <button class="btn" id="btnUnlock">Buka</button>
+      </div>
+      <div id="lockMsg" class="hint" style="margin-top:8px;"></div>
+    </section>
+
+    <section class="panel">
+      <h2 style="margin:0 0 8px;">Grant Subscription (Manual)</h2>
+      <div class="row">
+        <input id="gEmail" placeholder="Email user (harus sudah registrasi)" style="flex:1;" />
+        <select id="gPlan">
+          <option value="WEEK">1 Minggu</option>
+          <option value="MONTH" selected>1 Bulan</option>
+          <option value="YEAR">1 Tahun</option>
+        </select>
+        <button class="btn primary" id="btnGrant">Aktifkan</button>
+      </div>
+      <div id="grantMsg" class="hint" style="margin-top:8px;"></div>
+    </section>
+
+    <section class="panel">
+      <div class="row" style="justify-content:space-between;">
+        <h2 style="margin:0;">Payments Pending</h2>
+        <button class="btn small" id="btnReloadPay">Reload</button>
+      </div>
+      <div id="payList" class="list" style="margin-top:10px;"></div>
     </section>
   </main>
 
-  <script type="module" src="/admin.js"></script>
+  <script type="module" src="./admin.js"></script>
 </body>
 </html>

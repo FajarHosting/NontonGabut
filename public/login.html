@@ -3,50 +3,51 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login - NontonGabut</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>Login - Nonton</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <main class="authShell">
     <section class="authCard">
-      <div class="authHeader">
-        <h1>Masuk ke NontonGabut</h1>
-        <p class="muted">Login dulu sebelum bisa masuk menu streaming.</p>
+      <div class="row" style="justify-content:space-between;">
+        <div class="brand">
+          <div class="logoMark">N</div>
+          <div>
+            <div class="brandTitle">Nonton</div>
+            <div class="brandSub">Anime • Donghua • Drakor</div>
+          </div>
+        </div>
       </div>
 
-      <div class="authGrid">
-        <label class="field">
-          <span>Email</span>
-          <input id="email" type="email" placeholder="contoh@email.com" autocomplete="email" />
-        </label>
+      <div style="margin-top:14px;">
+        <h2 style="margin:0 0 8px;">Masuk</h2>
+        <p class="muted small" style="margin:0 0 12px;">Registrasi manual (Email/Password). Login tersimpan di perangkat.</p>
 
-        <label class="field">
-          <span>Password</span>
-          <input id="password" type="password" placeholder="Minimal 6 karakter" autocomplete="current-password" />
-        </label>
+        <div class="row" style="flex-direction:column; align-items:stretch;">
+          <label class="field">
+            <span>Email</span>
+            <input id="email" type="email" placeholder="nama@email.com" autocomplete="email" />
+          </label>
+          <label class="field">
+            <span>Password</span>
+            <input id="password" type="password" placeholder="Minimal 6 karakter" autocomplete="current-password" />
+          </label>
 
-        <div class="row">
-          <button id="loginEmailBtn" class="btn primary" type="button">Login</button>
-          <button id="registerBtn" class="btn" type="button">Registrasi</button>
+          <div class="row" style="justify-content:space-between;">
+            <button id="btnLogin" class="btn primary" type="button">Login</button>
+            <button id="btnRegister" class="btn" type="button">Registrasi</button>
+          </div>
+
+          <p id="msg" class="hint"></p>
+
+          <div class="panel" style="margin:12px 0 0;">
+            <div class="muted small"><b>Free</b> hanya bisa menonton sampai episode 10. Berlangganan untuk akses penuh.</div>
+          </div>
         </div>
-
-        <p id="msg" class="hint"></p>
-
-        <div class="divider"><span>atau</span></div>
-
-        <!-- Google button DI BAWAH sesuai permintaan -->
-        <button id="googleBtn" class="btn google" type="button">
-          <span class="gDot"></span>
-          Login dengan Google
-        </button>
-
-        <p class="foot muted">
-          Dengan login, Anda setuju untuk menggunakan aplikasi ini secara bertanggung jawab.
-        </p>
       </div>
     </section>
   </main>
 
-  <script type="module" src="/login.js"></script>
+  <script type="module" src="./auth.js"></script>
 </body>
 </html>
