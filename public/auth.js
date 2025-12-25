@@ -1,7 +1,7 @@
 // public/auth.js (MODULE)
 // Anda wajib buat Firebase project + enable Authentication: Google + Email/Password
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -13,10 +13,10 @@ import {
 
 // GANTI ini dari Firebase Console > Project settings > General > Your apps
 const firebaseConfig = {
-  apiKey: "ISI_API_KEY",
-  authDomain: "ISI_AUTH_DOMAIN",
-  projectId: "ISI_PROJECT_ID",
-  appId: "ISI_APP_ID"
+  apiKey: "AIzaSyBv4CtR32gitlAHyVx5meLZyWwUehrx8yg",
+  authDomain: "nontongabut-c2ab5.firebaseapp.com",
+  projectId: "nontongabut-c2ab5",
+  appId: "1:894793504242:web:309eec43fbc057db18476b"
 };
 
 const app = initializeApp(firebaseConfig);
