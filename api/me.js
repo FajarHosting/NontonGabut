@@ -6,7 +6,7 @@ export default async function handler(req, res) {
     return res.json({
       ok: true,
       user: {
-        id: user._id,
+        id: user._id.toString(),
         email: user.email,
         displayName: user.displayName,
         isSubscribed: !!user.isSubscribed,
