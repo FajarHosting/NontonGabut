@@ -1,0 +1,88 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <title>NontonGabut — Admin</title>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <img src="/assets/logo.svg" alt="logo" />
+        <div>Admin Panel</div>
+      </div>
+      <div class="right">
+        <a class="btn ghost" href="/index.html">Home</a>
+        <a class="btn ghost" href="/profile.html">Profil</a>
+        <button class="btn danger" id="btnLogout">Logout</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="h2">Tambah Series</div>
+      <div class="form">
+        <input class="input" id="sTitle" placeholder="Judul" />
+        <select class="input" id="sType">
+          <option value="anime">Anime</option>
+          <option value="donghua">Donghua</option>
+          <option value="drakor">Drakor</option>
+          <option value="dracin">Dracin</option>
+        </select>
+        <input class="input" id="sGenres" placeholder="Genres (pisah koma) ex: action,comedy" />
+        <input class="input" id="sPoster" placeholder="Poster URL (link gambar)" />
+        <input class="input" id="sFreeLimit" placeholder="Free limit episode (default 10)" />
+        <div class="row">
+          <button class="btn" id="btnAddSeries">Simpan Series</button>
+        </div>
+      </div>
+      <div id="msg1" class="small" style="margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="h2">Tambah Episode</div>
+      <div class="small">Video harus link langsung ke file video (mp4/m3u8). Thumbnail pakai link gambar.</div>
+      <div class="form" style="margin-top:10px">
+        <input class="input" id="eSeriesId" placeholder="Series ID (copy dari list)" />
+        <input class="input" id="eNumber" placeholder="Episode number (contoh: 1)" />
+        <input class="input" id="eTitle" placeholder="Judul episode" />
+        <input class="input" id="eVideo" placeholder="Video URL (direct)" />
+        <input class="input" id="eThumb" placeholder="Thumbnail URL (link gambar)" />
+        <div class="row">
+          <button class="btn" id="btnAddEp">Simpan Episode</button>
+        </div>
+      </div>
+      <div id="msg2" class="small" style="margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="h2">Grant Subscription Gratis</div>
+      <div class="form">
+        <input class="input" id="gEmail" placeholder="Email user" />
+        <select class="input" id="gPlan">
+          <option value="1w">1 Minggu</option>
+          <option value="1m" selected>1 Bulan</option>
+          <option value="1y">1 Tahun</option>
+        </select>
+        <div class="row">
+          <button class="btn" id="btnGive">Give</button>
+        </div>
+      </div>
+      <div id="msg3" class="small" style="margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="h2">Payment Requests (Pending)</div>
+      <div class="list" id="payList"></div>
+    </div>
+
+    <div class="panel">
+      <div class="h2">Series List (untuk ambil Series ID)</div>
+      <div class="list" id="seriesList"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/admin.js"></script>
+</body>
+</html>
