@@ -1,0 +1,83 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <title>NontonGabut — Profil</title>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <img src="/assets/logo.svg" alt="logo" />
+        <div>Profil</div>
+      </div>
+      <div class="right">
+        <a class="btn ghost" href="/index.html">Home</a>
+        <a class="btn ghost" href="/admin.html" id="adminLink" style="display:none">Admin</a>
+        <button class="btn danger" id="btnLogout">Logout</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="row" style="justify-content:space-between">
+        <div class="row">
+          <div class="avatar" id="av"></div>
+          <div>
+            <div style="font-weight:950" id="nm"></div>
+            <div class="small" id="em"></div>
+          </div>
+        </div>
+        <div id="status" class="badge"></div>
+      </div>
+
+      <div class="form" style="margin-top:14px">
+        <input class="input" id="displayName" placeholder="Ubah nama" />
+        <input class="input" id="avatarUrl" placeholder="Avatar URL (link gambar)" />
+        <div class="row">
+          <button class="btn" id="btnSave">Simpan Profil</button>
+        </div>
+      </div>
+      <div id="msg" class="small" style="margin-top:10px"></div>
+    </div>
+
+    <div class="panel">
+      <div class="h2">Berlangganan</div>
+      <div class="small">Pembayaran manual. Kirim bukti berupa <b>link gambar</b> (misalnya upload ke drive/imgur lalu paste link).</div>
+
+      <div class="form" style="margin-top:10px">
+        <select class="input" id="plan">
+          <option value="1w">1 Minggu</option>
+          <option value="1m" selected>1 Bulan</option>
+          <option value="1y">1 Tahun</option>
+        </select>
+        <select class="input" id="method">
+          <option value="qris">QRIS</option>
+          <option value="dana">DANA</option>
+          <option value="seabank">SeaBank</option>
+        </select>
+        <input class="input" id="proofUrl" placeholder="Link bukti pembayaran (gambar)" />
+        <div class="row">
+          <button class="btn" id="btnReq">Kirim Request</button>
+          <a class="btn ghost" href="/admin.html" id="btnGotoAdmin" style="display:none">Proses di Admin</a>
+        </div>
+      </div>
+
+      <div class="panel" style="margin-top:12px">
+        <div class="h2">Info pembayaran (manual)</div>
+        <div class="small">
+          • DANA: tulis nomor DANA kamu di sini (editable belakangan)<br/>
+          • SeaBank: tulis nomor rekening kamu di sini<br/>
+          • QRIS: pasang link gambar QRIS kamu di sini<br/><br/>
+          <b>Catatan:</b> Proses approve dilakukan di Admin.
+        </div>
+      </div>
+
+      <div id="msg2" class="small" style="margin-top:10px"></div>
+    </div>
+  </div>
+
+  <script type="module" src="/js/profile.js"></script>
+</body>
+</html>

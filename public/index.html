@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="/css/style.css" />
+  <title>NontonGabut — Home</title>
+</head>
+<body>
+  <div class="container">
+    <div class="nav">
+      <div class="brand">
+        <img src="/assets/logo.svg" alt="logo" />
+        <div>NontonGabut</div>
+      </div>
+      <div class="right">
+        <div class="pill" id="subPill">Loading...</div>
+        <a class="btn ghost" href="/profile.html">Profil</a>
+        <button class="btn danger" id="btnLogout">Logout</button>
+      </div>
+    </div>
+
+    <div class="h1">Cari tontonan</div>
+    <div class="small">Anime, Donghua, Drakor, Dracin. Filter genre. Episode terkunci jika belum berlangganan (free max 10 episode/series).</div>
+
+    <div class="panel">
+      <div class="form">
+        <input id="q" class="input" placeholder="Cari judul..." />
+        <select id="type" class="input">
+          <option value="">Semua Tipe</option>
+          <option value="anime">Anime</option>
+          <option value="donghua">Donghua</option>
+          <option value="drakor">Drakor</option>
+          <option value="dracin">Dracin</option>
+        </select>
+        <input id="genre" class="input" placeholder="Genre (contoh: action, comedy, romance)" />
+        <div class="row">
+          <button class="btn" id="btnSearch">Search</button>
+          <button class="btn ghost" id="btnReset">Reset</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+  </div>
+
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>
