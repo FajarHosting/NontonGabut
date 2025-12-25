@@ -1,7 +1,7 @@
 // public/auth.js (MODULE)
-// Anda wajib buat Firebase project + enable Authentication: Google + Email/Password
+import { firebaseConfig } from "/firebase-config.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
   GoogleAuthProvider,
@@ -11,17 +11,10 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-// GANTI ini dari Firebase Console > Project settings > General > Your apps
-const firebaseConfig = {
-  apiKey: "AIzaSyBv4CtR32gitlAHyVx5meLZyWwUehrx8yg",
-  authDomain: "nontongabut-c2ab5.firebaseapp.com",
-  projectId: "nontongabut-c2ab5",
-  appId: "1:894793504242:web:309eec43fbc057db18476b"
-};
-
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 
+// ID elemen harus ada di login.html Anda
 const googleBtn = document.getElementById("googleBtn");
 const googleMsg = document.getElementById("googleMsg");
 
@@ -32,7 +25,6 @@ const registerBtn = document.getElementById("registerBtn");
 const emailMsg = document.getElementById("emailMsg");
 
 function goHome() {
-  // setelah login → kembali ke index
   window.location.href = "/index.html";
 }
 
@@ -41,35 +33,35 @@ onAuthStateChanged(auth, (user) => {
 });
 
 googleBtn?.addEventListener("click", async () => {
-  googleMsg.textContent = "Memproses...";
+  if (googleMsg) googleMsg.textContent = "Memproses...";
   try {
     const provider = new GoogleAuthProvider();
     await signInWithPopup(auth, provider);
-    googleMsg.textContent = "Login sukses.";
+    if (googleMsg) googleMsg.textContent = "Login sukses.";
     goHome();
   } catch (e) {
-    googleMsg.textContent = "Gagal login Google: " + (e?.message || String(e));
+    if (googleMsg) googleMsg.textContent = "Gagal login Google: " + (e?.message || String(e));
   }
 });
 
 loginEmailBtn?.addEventListener("click", async () => {
-  emailMsg.textContent = "Memproses...";
+  if (emailMsg) emailMsg.textContent = "Memproses...";
   try {
     await signInWithEmailAndPassword(auth, emailEl.value.trim(), passwordEl.value);
-    emailMsg.textContent = "Login sukses.";
+    if (emailMsg) emailMsg.textContent = "Login sukses.";
     goHome();
   } catch (e) {
-    emailMsg.textContent = "Login gagal: " + (e?.message || String(e));
+    if (emailMsg) emailMsg.textContent = "Login gagal: " + (e?.message || String(e));
   }
 });
 
 registerBtn?.addEventListener("click", async () => {
-  emailMsg.textContent = "Memproses registrasi...";
+  if (emailMsg) emailMsg.textContent = "Memproses registrasi...";
   try {
     await createUserWithEmailAndPassword(auth, emailEl.value.trim(), passwordEl.value);
-    emailMsg.textContent = "Registrasi sukses. Anda sudah login.";
+    if (emailMsg) emailMsg.textContent = "Registrasi sukses. Anda sudah login.";
     goHome();
   } catch (e) {
-    emailMsg.textContent = "Registrasi gagal: " + (e?.message || String(e));
+    if (emailMsg) emailMsg.textContent = "Registrasi gagal: " + (e?.message || String(e));
   }
 });
