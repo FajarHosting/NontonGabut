@@ -7,6 +7,13 @@ export default async function handler(req, res) {
   try {
     if (req.method !== "POST") return res.status(405).json({ ok: false, error: "Method not allowed" });
 
+    if (!process.env.MONGODB_URI || !process.env.MONGODB_DB) {
+      return res.status(500).json({ ok: false, error: "Missing MongoDB env" });
+    }
+    if (!process.env.JWT_SECRET) {
+      return res.status(500).json({ ok: false, error: "Missing JWT_SECRET env" });
+    }
+
     const { email, password } = await readJson(req);
     const e = String(email || "").trim().toLowerCase();
     const p = String(password || "");
@@ -18,7 +25,8 @@ export default async function handler(req, res) {
     const ok = await bcrypt.compare(p, user.passwordHash || "");
     if (!ok) return res.status(400).json({ ok: false, error: "Email / password salah" });
 
-    const token = signToken({ id: user._id, email: user.email });
+    // IMPORTANT: _id dibuat string
+    const token = signToken({ id: user._id.toString(), email: user.email });
 
     return res.json({
       ok: true,
