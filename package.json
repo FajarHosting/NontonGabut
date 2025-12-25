@@ -1,13 +1,14 @@
 {
-  "name": "nonton-gabut",
+  "name": "nontongabut",
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "echo \"No build required\"",
-    "start": "node -e \"console.log('Static + Serverless API on Vercel')\""
+    "build": "echo \"no build\"",
+    "backup": "node backup/backup.js",
+    "cleanup": "node backup/cleanup.js"
   },
   "dependencies": {
-    "@vercel/blob": "^0.27.0",
+    "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "mongodb": "^6.6.2"
   }

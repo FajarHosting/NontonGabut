@@ -1,18 +1,17 @@
 {
   "rewrites": [
     { "source": "/", "destination": "/public/index.html" },
-    { "source": "/index.html", "destination": "/public/index.html" },
-
     { "source": "/login", "destination": "/public/login.html" },
-    { "source": "/login.html", "destination": "/public/login.html" },
-
+    { "source": "/profile", "destination": "/public/profile.html" },
+    { "source": "/watch", "destination": "/public/watch.html" },
     { "source": "/admin", "destination": "/public/admin.html" },
-    { "source": "/admin.html", "destination": "/public/admin.html" },
 
     { "source": "/styles.css", "destination": "/public/styles.css" },
+    { "source": "/config.js", "destination": "/public/config.js" },
+    { "source": "/auth.js", "destination": "/public/auth.js" },
     { "source": "/app.js", "destination": "/public/app.js" },
-    { "source": "/admin.js", "destination": "/public/admin.js" },
-    { "source": "/login.js", "destination": "/public/login.js" },
-    { "source": "/firebase-config.js", "destination": "/public/firebase-config.js" }
+    { "source": "/watch.js", "destination": "/public/watch.js" },
+    { "source": "/profile.js", "destination": "/public/profile.js" },
+    { "source": "/admin.js", "destination": "/public/admin.js" }
   ]
 }
