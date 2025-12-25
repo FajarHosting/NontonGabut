@@ -1,15 +1,9 @@
 {
   "name": "nontongabut",
-  "private": true,
+  "version": "1.0.0",
   "type": "module",
-  "scripts": {
-    "build": "echo \"no build\"",
-    "backup": "node backup/backup.js",
-    "cleanup": "node backup/cleanup.js"
-  },
   "dependencies": {
-    "bcryptjs": "^2.4.3",
-    "jsonwebtoken": "^9.0.2",
-    "mongodb": "^6.6.2"
+    "mongodb": "^6.7.0",
+    "bcryptjs": "^2.4.3"
   }
 }

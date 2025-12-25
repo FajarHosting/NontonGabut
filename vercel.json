@@ -1,17 +1,10 @@
 {
-  "rewrites": [
-    { "source": "/", "destination": "/public/index.html" },
-    { "source": "/login", "destination": "/public/login.html" },
-    { "source": "/profile", "destination": "/public/profile.html" },
-    { "source": "/watch", "destination": "/public/watch.html" },
-    { "source": "/admin", "destination": "/public/admin.html" },
-
-    { "source": "/styles.css", "destination": "/public/styles.css" },
-    { "source": "/config.js", "destination": "/public/config.js" },
-    { "source": "/auth.js", "destination": "/public/auth.js" },
-    { "source": "/app.js", "destination": "/public/app.js" },
-    { "source": "/watch.js", "destination": "/public/watch.js" },
-    { "source": "/profile.js", "destination": "/public/profile.js" },
-    { "source": "/admin.js", "destination": "/public/admin.js" }
+  "builds": [
+    { "src": "index.js", "use": "@vercel/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/index.js" },
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/public/$1" }
   ]
 }
