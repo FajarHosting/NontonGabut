@@ -1,9 +1,10 @@
 {
-  "name": "nontongabut",
+  "name": "nonton-gabut",
   "version": "1.0.0",
-  "type": "module",
+  "private": true,
+  "main": "api/index.js",
+  "type": "commonjs",
   "dependencies": {
-    "mongodb": "^6.7.0",
-    "bcryptjs": "^2.4.3"
+    "express": "^4.19.2"
   }
 }
