@@ -1,114 +1,163 @@
-import { api } from "./api.js";
-import { requireAdmin } from "./guard.js";
+async function getJSON(url) {
+  const r = await fetch(url);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw data;
+  return data;
+}
+async function postJSON(url, body) {
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw data;
+  return data;
+}
+function esc(s){ return String(s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
+function fmtIDR(n){
+  const x = Number(n||0);
+  return "Rp " + x.toLocaleString("id-ID");
+}
 
-const $ = (id)=>document.getElementById(id);
-const msg = (id, t)=>$(id).textContent=t;
+async function loadMe(){
+  const { user } = await getJSON("/api/auth/me");
+  if (!user) { window.location.href = "/login"; return; }
+  if (!user.isAdmin) { alert("Akses admin ditolak."); window.location.href = "/app"; return; }
+  document.getElementById("me").textContent =
+    `${user.username} • Admin • ${user.premiumActive ? "Premium Active" : "Free"}`;
+}
 
-$("btnLogout").onclick = async ()=>{
-  await api("/api/auth/logout", { method:"POST" });
-  location.href="/login.html";
+async function loadStats(){
+  const s = await getJSON("/api/admin/stats");
+  document.getElementById("stats").innerHTML = `
+    <div class="txRow">
+      <div>
+        <div style="font-weight:950;">User</div>
+        <div class="muted">${esc(s.userCount)}</div>
+      </div>
+      <span class="tag">COUNT</span>
+    </div>
+
+    <div class="txRow" style="margin-top:10px;">
+      <div>
+        <div style="font-weight:950;">Konten</div>
+        <div class="muted">${esc(s.contentCount)}</div>
+      </div>
+      <span class="tag">COUNT</span>
+    </div>
+
+    <div class="txRow" style="margin-top:10px;">
+      <div>
+        <div style="font-weight:950;">Transaksi PAID</div>
+        <div class="muted">${esc(s.paidTxCount)}</div>
+      </div>
+      <span class="tag">PAID</span>
+    </div>
+
+    <div class="txRow" style="margin-top:10px;">
+      <div>
+        <div style="font-weight:950;">Revenue (Profit)</div>
+        <div class="muted">${esc(fmtIDR(s.revenueIDR))}</div>
+      </div>
+      <span class="tag">IDR</span>
+    </div>
+  `;
+}
+
+function txCard(tx){
+  const who = tx.userId && tx.userId.username ? tx.userId.username : "-";
+  const created = tx.createdAt ? new Date(tx.createdAt).toLocaleString("id-ID") : "-";
+  return `
+    <div class="mini">
+      <div class="txRow">
+        <div>
+          <div style="font-weight:950;">${esc(who)} • ${esc(tx.plan)} • ${esc(fmtIDR(tx.amountIDR))}</div>
+          <div class="muted">Metode: ${esc(tx.method)} • ${esc(created)} • TX: ${esc(tx._id)}</div>
+        </div>
+        <span class="tag">${esc(tx.status)}</span>
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <button onclick="window.markTx('${esc(tx._id)}','PAID')">Mark PAID</button>
+        <button class="ghost" onclick="window.markTx('${esc(tx._id)}','REJECTED')">Reject</button>
+      </div>
+    </div>
+  `;
+}
+
+async function loadTx(){
+  const { items } = await getJSON("/api/admin/transactions");
+  const box = document.getElementById("txList");
+  if (!items.length) {
+    box.innerHTML = `<div class="muted" style="margin-top:10px;">Belum ada transaksi.</div>`;
+    return;
+  }
+  box.innerHTML = items.map(txCard).join("");
+}
+
+window.markTx = async (txId, status) => {
+  if (!confirm(`Ubah status transaksi menjadi ${status}?`)) return;
+  await postJSON("/api/admin/transactions/mark", { txId, status });
+  await loadStats();
+  await loadTx();
 };
 
-function payRow(p){
-  return `
-    <div class="item">
-      <div>
-        <div style="font-weight:900">${p.email}</div>
-        <div class="small">Plan: ${p.plan} • Method: ${p.method} • Status: ${p.status}</div>
-        <div class="small">Proof: <a href="${p.proofUrl}" target="_blank" rel="noopener">buka bukti</a></div>
-      </div>
-      <div class="row">
-        <button class="btn" data-approve="${p._id}">Approve</button>
-        <button class="btn danger" data-reject="${p._id}">Reject</button>
-      </div>
-    </div>
-  `;
-}
+document.getElementById("btnGift").addEventListener("click", async ()=>{
+  const u = document.getElementById("giftUser").value.trim();
+  const days = Number(document.getElementById("giftDays").value || 30);
+  const msg = document.getElementById("giftMsg");
+  msg.textContent = "Processing...";
+  try{
+    const r = await postJSON("/api/admin/users/give-premium", { username: u, days });
+    msg.textContent = `Sukses. Premium until: ${new Date(r.premiumUntil).toLocaleString("id-ID")}`;
+  } catch(e){
+    msg.textContent = "Gagal. Pastikan username benar dan days 1-365.";
+  }
+});
 
-function seriesRow(s){
-  return `
-    <div class="item">
-      <div>
-        <div style="font-weight:950">${s.title}</div>
-        <div class="small">${(s.type||"").toUpperCase()} • ID: <b>${s._id}</b></div>
-      </div>
-      <div class="badge">${(s.genres||[]).slice(0,3).join(", ")}</div>
-    </div>
-  `;
-}
+document.getElementById("btnUpsert").addEventListener("click", async ()=>{
+  const btn = document.getElementById("btnUpsert");
+  const msg = document.getElementById("upsertMsg");
+  btn.disabled = true;
+  msg.textContent = "Saving...";
 
-async function reload(){
-  const p = await api("/api/admin/payments");
-  $("payList").innerHTML = p.items.map(payRow).join("") || `<div class="small">Tidak ada pending.</div>`;
+  const type = document.getElementById("type").value;
+  const title = document.getElementById("title").value.trim();
+  const coverUrl = document.getElementById("coverUrl").value.trim();
+  const genres = document.getElementById("genres").value.trim();
+  const synopsis = document.getElementById("synopsis").value.trim();
+  const episodesText = document.getElementById("episodes").value.trim();
 
-  const s = await api("/api/series");
-  $("seriesList").innerHTML = (s.items || []).map(seriesRow).join("") || `<div class="small">Belum ada series.</div>`;
-}
+  let episodes = [];
+  try{
+    episodes = episodesText ? JSON.parse(episodesText) : [];
+    if (!Array.isArray(episodes)) throw new Error("episodes not array");
+  } catch {
+    msg.textContent = "Episodes JSON tidak valid.";
+    btn.disabled = false;
+    return;
+  }
+
+  try{
+    const r = await postJSON("/api/admin/content/upsert", {
+      type, title, coverUrl, genres, synopsis, episodes
+    });
+    msg.textContent = `Sukses. Content ID: ${r.item._id}`;
+  } catch(e){
+    msg.textContent = "Gagal menyimpan. Periksa field wajib dan URL episode.";
+  } finally{
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("btnLogout").addEventListener("click", async ()=>{
+  await postJSON("/api/auth/logout");
+  window.location.href = "/login";
+});
 
 (async ()=>{
-  await requireAdmin();
-
-  $("btnAddSeries").onclick = async ()=>{
-    msg("msg1", "Menyimpan...");
-    try{
-      const genres = $("sGenres").value.split(",").map(x=>x.trim()).filter(Boolean);
-      await api("/api/admin/series", { method:"POST", body:{
-        title: $("sTitle").value,
-        type: $("sType").value,
-        genres,
-        posterUrl: $("sPoster").value,
-        freeLimit: Number($("sFreeLimit").value || 10)
-      }});
-      msg("msg1","OK. Series tersimpan.");
-      await reload();
-    }catch(e){
-      msg("msg1","Gagal: " + e.message);
-    }
-  };
-
-  $("btnAddEp").onclick = async ()=>{
-    msg("msg2", "Menyimpan...");
-    try{
-      await api("/api/admin/episode", { method:"POST", body:{
-        seriesId: $("eSeriesId").value,
-        number: Number($("eNumber").value),
-        title: $("eTitle").value,
-        videoUrl: $("eVideo").value,
-        thumbUrl: $("eThumb").value
-      }});
-      msg("msg2","OK. Episode tersimpan.");
-    }catch(e){
-      msg("msg2","Gagal: " + e.message);
-    }
-  };
-
-  $("btnGive").onclick = async ()=>{
-    msg("msg3","Memproses...");
-    try{
-      await api("/api/admin/sub/give", { method:"POST", body:{
-        email: $("gEmail").value,
-        plan: $("gPlan").value
-      }});
-      msg("msg3","OK. Subscription diberikan.");
-    }catch(e){
-      msg("msg3","Gagal: " + e.message);
-    }
-  };
-
-  $("payList").addEventListener("click", async (e)=>{
-    const a = e.target.closest("[data-approve]");
-    const r = e.target.closest("[data-reject]");
-    if (a){
-      const id = a.getAttribute("data-approve");
-      await api("/api/admin/payments/approve", { method:"POST", body:{ paymentId:id }});
-      await reload();
-    }
-    if (r){
-      const id = r.getAttribute("data-reject");
-      await api("/api/admin/payments/reject", { method:"POST", body:{ paymentId:id }});
-      await reload();
-    }
-  });
-
-  await reload();
+  await loadMe();
+  await loadStats();
+  await loadTx();
 })();

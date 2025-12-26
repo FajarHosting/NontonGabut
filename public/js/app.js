@@ -1,139 +1,92 @@
-import { api } from "./api.js";
-import { requireLogin } from "./guard.js";
-
-const elList = document.getElementById("film-list");
-const elCount = document.getElementById("count");
-const elCat = document.getElementById("cat");
-const elGenre = document.getElementById("genre");
-const elQ = document.getElementById("q");
-const btnSearch = document.getElementById("btnSearch");
-const btnReset = document.getElementById("btnReset");
-const btnLogout = document.getElementById("btnLogout");
-const subBadge = document.getElementById("subBadge");
-
-let ALL = [];
-
-function uniq(arr) {
-  return [...new Set(arr.filter(Boolean))].sort((a, b) => a.localeCompare(b));
+async function getJSON(url) {
+  const r = await fetch(url);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw data;
+  return data;
+}
+async function postJSON(url, body) {
+  const r = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body || {})
+  });
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw data;
+  return data;
 }
 
-function esc(s) {
-  return String(s ?? "").replace(/[&<>"']/g, (m) => ({
-    "&": "&amp;", "<": "&lt;", ">": "&gt;", "\"": "&quot;", "'": "&#039;"
-  }[m]));
-}
+function esc(s){ return String(s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
 
-function buildFilters(series) {
-  const cats = uniq(series.map(s => s.category));
-  const genres = uniq(series.flatMap(s => Array.isArray(s.genres) ? s.genres : []));
-
-  // reset options (keep first placeholder)
-  elCat.length = 1;
-  elGenre.length = 1;
-
-  for (const c of cats) {
-    const opt = document.createElement("option");
-    opt.value = c;
-    opt.textContent = c;
-    elCat.appendChild(opt);
+async function loadMe(){
+  const { user } = await getJSON("/api/auth/me");
+  if (!user) {
+    window.location.href = "/login";
+    return;
   }
-  for (const g of genres) {
-    const opt = document.createElement("option");
-    opt.value = g;
-    opt.textContent = g;
-    elGenre.appendChild(opt);
-  }
+  const me = document.getElementById("me");
+  me.textContent = `${user.username} • ${user.premiumActive ? "Premium Active" : "Free (10 eps) + Ad Unlock"}`;
+  if (user.isAdmin) document.getElementById("adminLink").style.display = "inline";
 }
 
-function matches(item, q, cat, genre) {
-  if (cat && item.category !== cat) return false;
-
-  if (genre) {
-    const gs = Array.isArray(item.genres) ? item.genres : [];
-    if (!gs.includes(genre)) return false;
-  }
-
-  if (q) {
-    const hay = `${item.title ?? ""} ${item.description ?? ""}`.toLowerCase();
-    if (!hay.includes(q.toLowerCase())) return false;
-  }
-  return true;
+function cardHTML(it){
+  const cover = it.coverUrl ? `<img src="${esc(it.coverUrl)}" alt="cover" style="width:100%;height:100%;object-fit:cover;display:block;">`
+                            : `<div style="font-weight:900;">${esc(it.title)}</div>`;
+  const chips = (it.genres||[]).slice(0,4).map(g=>`<span class="chip">${esc(g)}</span>`).join("");
+  return `
+    <div class="card">
+      <div class="cover">${cover}</div>
+      <div class="meta">
+        <div class="title">${esc(it.title)}</div>
+        <div class="sub">${esc(it.type)} • ${it.episodeCount} episode</div>
+        <div class="chips">${chips}</div>
+        <div class="sub">${esc((it.synopsis||"").slice(0,120))}${(it.synopsis||"").length>120?"...":""}</div>
+      </div>
+      <div class="actions">
+        <button onclick="openDetail('${it._id}')">Lihat Episode</button>
+        <button class="ghost" onclick="openWatch('${it._id}', 1)">Play Eps 1</button>
+      </div>
+    </div>
+  `;
 }
 
-function render(list) {
-  elCount.textContent = String(list.length);
+window.openWatch = (contentId, episode) => {
+  window.location.href = `/watch?contentId=${encodeURIComponent(contentId)}&episode=${encodeURIComponent(episode)}`;
+};
 
-  elList.innerHTML = list.map(s => {
-    const title = esc(s.title || "Untitled");
-    const cat = esc(s.category || "-");
-    const genres = esc((Array.isArray(s.genres) ? s.genres.join(", ") : ""));
-    const thumb = s.coverUrl || "";
+window.openDetail = async (id) => {
+  const { item } = await getJSON(`/api/content/${id}`);
+  const eps = (item.episodes||[]).map(e => `Eps ${e.episodeNumber}`).slice(0,10).join(", ");
+  alert(`${item.title}\nTotal episode: ${(item.episodes||[]).length}\nContoh episode: ${eps}\n\nKlik OK untuk buka Watch Eps 1.`);
+  openWatch(id, 1);
+};
 
-    return `
-      <a class="film-card" href="/watch.html?id=${encodeURIComponent(s._id)}">
-        <div class="thumb">
-          ${thumb
-            ? `<img src="${esc(thumb)}" alt="${title}" loading="lazy" />`
-            : `<div class="thumb-fallback">${title.slice(0, 1).toUpperCase()}</div>`
-          }
-        </div>
-        <div class="meta">
-          <div class="title">${title}</div>
-          <div class="subtitle">${cat}${genres ? ` • ${genres}` : ""}</div>
-        </div>
-      </a>
-    `;
-  }).join("");
+async function loadList(){
+  const q = document.getElementById("q").value.trim();
+  const type = document.getElementById("type").value;
+  const genre = document.getElementById("genre").value.trim();
+
+  const qs = new URLSearchParams();
+  if (q) qs.set("q", q);
+  if (type) qs.set("type", type);
+  if (genre) qs.set("genre", genre);
+
+  const { items } = await getJSON(`/api/content?${qs.toString()}`);
+  const grid = document.getElementById("grid");
+  grid.innerHTML = items.map(cardHTML).join("");
 }
 
-function apply() {
-  const q = elQ.value.trim();
-  const cat = elCat.value;
-  const genre = elGenre.value;
-  render(ALL.filter(s => matches(s, q, cat, genre)));
-}
-
-async function boot() {
-  // Halaman home ini wajib login
-  const me = await requireLogin();
-
-  // badge status subscribe
-  if (me?.isSubscribed) {
-    subBadge.textContent = "Subscribed";
-    subBadge.classList.add("ok");
-  } else {
-    subBadge.textContent = "Free (maks 10 episode)";
-    subBadge.classList.add("warn");
-  }
-
-  // load series
-  const data = await api("/api/series");
-  ALL = Array.isArray(data?.series) ? data.series : [];
-
-  buildFilters(ALL);
-  apply();
-}
-
-btnSearch?.addEventListener("click", apply);
-btnReset?.addEventListener("click", () => {
-  elCat.value = "";
-  elGenre.value = "";
-  elQ.value = "";
-  apply();
-});
-elCat?.addEventListener("change", apply);
-elGenre?.addEventListener("change", apply);
-elQ?.addEventListener("keydown", (e) => {
-  if (e.key === "Enter") apply();
+document.getElementById("btnLogout").addEventListener("click", async ()=>{
+  await postJSON("/api/auth/logout");
+  window.location.href = "/login";
 });
 
-btnLogout?.addEventListener("click", async () => {
-  try { await api("/api/auth/logout", { method: "POST" }); } catch {}
-  location.href = "/login.html";
+["q","type","genre"].forEach(id=>{
+  const el = document.getElementById(id);
+  el.addEventListener("input", () => { clearTimeout(window.__t); window.__t=setTimeout(loadList, 250); });
+  el.addEventListener("change", loadList);
 });
 
-boot().catch((e) => {
-  console.error(e);
-  // fallback: kalau ada error aneh, lempar ke login
-  location.href = "/login.html";
-});
+(async ()=>{
+  await loadMe();
+  await loadList();
+})();

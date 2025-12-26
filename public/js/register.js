@@ -15,23 +15,33 @@ function showErr(msg) {
   box.textContent = msg;
 }
 
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
+document.getElementById("regForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const btn = document.getElementById("btnLogin");
+
+  const btn = document.getElementById("btnReg");
   btn.disabled = true;
 
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value;
+  const password2 = document.getElementById("password2").value;
+
+  if (password !== password2) {
+    showErr("Konfirmasi password tidak sama.");
+    btn.disabled = false;
+    return;
+  }
 
   try {
-    await api("/api/auth/login", { username, password });
+    await api("/api/auth/register", { username, password });
     window.location.href = "/app";
   } catch (err) {
     const map = {
-      INVALID_CREDENTIALS: "Username atau password salah.",
+      USERNAME_TOO_SHORT: "Username minimal 3 karakter.",
+      PASSWORD_TOO_SHORT: "Password minimal 6 karakter.",
+      USERNAME_TAKEN: "Username sudah dipakai.",
       RATE_LIMITED: "Terlalu banyak percobaan. Coba lagi beberapa saat."
     };
-    showErr(map[err.error] || "Login gagal. Coba ulang.");
+    showErr(map[err.error] || "Registrasi gagal. Coba ulang.");
   } finally {
     btn.disabled = false;
   }
