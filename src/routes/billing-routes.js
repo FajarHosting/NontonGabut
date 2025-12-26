@@ -42,7 +42,7 @@ router.post("/checkout", requireLogin, async (req, res) => {
     qris: {
       title: "QRIS",
       instructions: "Scan QRIS (contoh placeholder). Setelah bayar, tunggu admin verifikasi.",
-      imageUrl: "https://img1.pixhost.to/images/11120/673863920_deomedia.jpg (PLACEHOLDER)"
+      imageUrl: "https://img1.pixhost.to/images/11120/673863920_deomedia.jpg"
     },
     dana: {
       title: "DANA",
