@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Admin | Stream App</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#111a33; --muted:#91a0c7; --text:#eaf0ff;
+      --accent:#6ee7ff; --accent2:#a78bfa; --border:rgba(255,255,255,.10);
+      --danger:#ff6b6b; --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    body{margin:0; min-height:100vh; color:var(--text); background:linear-gradient(180deg,#070a14,var(--bg));}
+    header{
+      position:sticky; top:0; z-index:5;
+      border-bottom:1px solid var(--border);
+      background:rgba(7,10,20,.72); backdrop-filter: blur(14px);
+    }
+    .wrap{width:min(1200px,100%); margin:0 auto; padding:16px 18px;}
+    .topRow{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .brand{display:flex; align-items:center; gap:10px;}
+    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));}
+    .pill{
+      border:1px solid var(--border); border-radius:999px;
+      background:rgba(255,255,255,.04); color:var(--text);
+      padding:8px 10px; font-size:12px; cursor:pointer; user-select:none;
+    }
+    .pill a{color:inherit;text-decoration:none}
+    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px;}
+    .card{
+      border:1px solid var(--border); border-radius:18px;
+      background:linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.62));
+      box-shadow:var(--shadow);
+      padding:14px;
+    }
+    h1{margin:0;font-size:16px;}
+    .muted{color:var(--muted); font-size:12px; line-height:1.5;}
+    input, select, textarea, button{
+      width:100%; padding:11px 12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(10,14,28,.55); color:var(--text);
+      outline:none;
+    }
+    textarea{min-height:90px; resize:vertical;}
+    button{
+      border:0; cursor:pointer; font-weight:950;
+      background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#07101a;
+    }
+    button:disabled{opacity:.6; cursor:not-allowed;}
+    .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.14);}
+    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
+    .box{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.03);
+      border-radius:16px;
+      padding:12px;
+      margin-top:10px;
+    }
+    .mini{
+      border:1px solid rgba(255,255,255,.10);
+      background:rgba(255,255,255,.02);
+      border-radius:14px;
+      padding:10px;
+      margin-top:10px;
+    }
+    .tag{font-size:11px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14); color:var(--muted); height:fit-content;}
+    .txRow{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
+    @media(max-width: 980px){ .grid{grid-template-columns:1fr;} .row{grid-template-columns:1fr;} }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topRow">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div style="font-weight:950;">Admin Panel</div>
+          <div id="me" class="muted">Loading...</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <span class="pill"><a href="/app">Katalog</a></span>
+        <span class="pill"><a href="/billing">Premium</a></span>
+        <span class="pill" id="btnLogout">Logout</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="grid">
+    <section class="card">
+      <h1>Profit & Statistik</h1>
+      <div class="muted">Rekap transaksi PAID (sederhana).</div>
+      <div id="stats" class="box">Loading...</div>
+
+      <div class="box">
+        <h1 style="margin:0 0 6px;">Gift Premium ke User</h1>
+        <div class="row">
+          <input id="giftUser" placeholder="username target (lowercase)" />
+          <input id="giftDays" type="number" value="30" min="1" max="365" />
+        </div>
+        <button id="btnGift" style="margin-top:10px;">Give Premium</button>
+        <div id="giftMsg" class="muted" style="margin-top:8px;"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h1>Tambah / Update Konten</h1>
+      <div class="muted">
+        Tambahkan konten legal milik Anda (URL video langsung atau embed). Episode ditulis dalam format JSON.
+      </div>
+
+      <div class="row" style="margin-top:10px;">
+        <select id="type">
+          <option value="anime">Anime</option>
+          <option value="donghua">Donghua</option>
+          <option value="drakor">Drakor</option>
+          <option value="dracin">Dracin</option>
+        </select>
+        <input id="title" placeholder="Judul" />
+      </div>
+
+      <input id="coverUrl" placeholder="Cover URL (opsional)" style="margin-top:10px;" />
+      <input id="genres" placeholder="Genre (pisahkan koma). contoh: action, fantasy" style="margin-top:10px;" />
+      <textarea id="synopsis" placeholder="Sinopsis (opsional)" style="margin-top:10px;"></textarea>
+
+      <div class="box">
+        <div style="font-weight:950;">Episodes JSON</div>
+        <div class="muted" style="margin-top:6px;">
+          Contoh:
+          <code>
+            [{"episodeNumber":1,"title":"Eps 1","videoUrl":"https://...mp4","thumbUrl":""}]
+          </code>
+        </div>
+        <textarea id="episodes" placeholder='[{"episodeNumber":1,"title":"Eps 1","videoUrl":"https://...","thumbUrl":""}]'
+                  style="margin-top:10px; min-height:140px;"></textarea>
+      </div>
+
+      <button id="btnUpsert" style="margin-top:10px;">Simpan Konten</button>
+      <div id="upsertMsg" class="muted" style="margin-top:8px;"></div>
+    </section>
+  </div>
+
+  <section class="card" style="margin-top:14px;">
+    <h1>Verifikasi Transaksi (Manual)</h1>
+    <div class="muted">
+      Transaksi dibuat user sebagai PENDING. Admin dapat mengubah menjadi PAID/REJECTED.
+      Saat PAID, sistem otomatis menambahkan masa premium user.
+    </div>
+    <div id="txList"></div>
+  </section>
+</main>
+
+<script src="/public/js/admin.js"></script>
+</body>
+</html>

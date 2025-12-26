@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Catalog | Stream App</title>
+  <style>
+    :root{
+      --bg:#0b1020; --card:#111a33; --muted:#91a0c7; --text:#eaf0ff;
+      --accent:#6ee7ff; --accent2:#a78bfa; --border:rgba(255,255,255,.10);
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+    }
+    *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
+    body{margin:0; min-height:100vh; color:var(--text); background:linear-gradient(180deg,#070a14,var(--bg));}
+    header{
+      position:sticky; top:0; z-index:5;
+      border-bottom:1px solid var(--border);
+      background:rgba(7,10,20,.72); backdrop-filter: blur(14px);
+    }
+    .wrap{width:min(1100px,100%); margin:0 auto; padding:16px 18px;}
+    .topRow{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
+    .brand{display:flex; align-items:center; gap:10px;}
+    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));}
+    .nav{display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
+    .pill{
+      border:1px solid var(--border); border-radius:999px;
+      background:rgba(255,255,255,.04); color:var(--text);
+      padding:8px 10px; font-size:12px; cursor:pointer; user-select:none;
+    }
+    .pill a{color:inherit;text-decoration:none}
+    .grid{display:grid; grid-template-columns: repeat(3, 1fr); gap:14px; margin-top:14px;}
+    .card{
+      border:1px solid var(--border); border-radius:18px; overflow:hidden;
+      background:linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.62));
+      box-shadow:var(--shadow);
+      display:flex; flex-direction:column;
+      min-height: 290px;
+    }
+    .cover{
+      height:150px;
+      background: radial-gradient(700px 200px at 10% 30%, rgba(110,231,255,.18), transparent 60%),
+                  radial-gradient(500px 160px at 90% 30%, rgba(167,139,250,.18), transparent 60%),
+                  rgba(255,255,255,.04);
+      display:flex; align-items:flex-end; padding:12px;
+    }
+    .cover img{width:100%; height:100%; object-fit:cover; display:block;}
+    .meta{padding:12px; display:flex; flex-direction:column; gap:8px;}
+    .title{font-weight:800; letter-spacing:.2px;}
+    .sub{font-size:12px; color:var(--muted); line-height:1.45;}
+    .chips{display:flex; gap:6px; flex-wrap:wrap;}
+    .chip{font-size:11px; padding:6px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted);}
+    .actions{margin-top:auto; padding:12px; display:flex; gap:10px;}
+    button{
+      flex:1; padding:10px 12px; border-radius:14px; border:0; cursor:pointer; font-weight:800;
+      background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#07101a;
+    }
+    .ghost{
+      background:transparent; color:var(--text); border:1px solid var(--border);
+    }
+    .filters{
+      display:grid; grid-template-columns: 1.4fr .8fr .8fr; gap:10px; margin-top:12px;
+    }
+    input, select{
+      width:100%; padding:11px 12px; border-radius:14px;
+      border:1px solid rgba(255,255,255,.14);
+      background:rgba(10,14,28,.55); color:var(--text);
+      outline:none;
+    }
+    @media (max-width: 920px){ .grid{grid-template-columns: repeat(2, 1fr);} }
+    @media (max-width: 600px){
+      .grid{grid-template-columns: 1fr;}
+      .filters{grid-template-columns:1fr;}
+    }
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="topRow">
+      <div class="brand">
+        <div class="logo"></div>
+        <div>
+          <div style="font-weight:900;">STREAM APP</div>
+          <div id="me" style="font-size:12px;color:var(--muted);">Loading...</div>
+        </div>
+      </div>
+      <div class="nav">
+        <span class="pill"><a href="/billing">Premium</a></span>
+        <span class="pill"><a href="/admin" id="adminLink" style="display:none;">Admin</a></span>
+        <span class="pill" id="btnLogout">Logout</span>
+      </div>
+    </div>
+
+    <div class="filters">
+      <input id="q" placeholder="Cari judul anime/drakor/donghua/dracin..." />
+      <select id="type">
+        <option value="">Semua Tipe</option>
+        <option value="anime">Anime</option>
+        <option value="donghua">Donghua</option>
+        <option value="drakor">Drakor</option>
+        <option value="dracin">Dracin</option>
+      </select>
+      <input id="genre" placeholder="Genre (misal: action)" />
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div id="grid" class="grid"></div>
+</main>
+
+<script src="/public/js/app.js"></script>
+</body>
+</html>
