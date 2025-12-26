@@ -7,68 +7,216 @@
   <style>
     :root{
       --bg:#0b1020; --card:#111a33; --muted:#91a0c7; --text:#eaf0ff;
-      --accent:#6ee7ff; --accent2:#a78bfa; --border:rgba(255,255,255,.10);
-      --danger:#ff6b6b; --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --accent:#6ee7ff; --accent2:#a78bfa;
+      --border:rgba(255,255,255,.10);
+      --danger:#ff6b6b; --ok:#5cffc7; --warn:#ffd56a;
+      --shadow: 0 20px 60px rgba(0,0,0,.45);
+      --shadow2: 0 12px 30px rgba(0,0,0,.35);
     }
+
     *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
-    body{margin:0; min-height:100vh; color:var(--text); background:linear-gradient(180deg,#070a14,var(--bg));}
+    body{
+      margin:0; min-height:100vh; color:var(--text);
+      background:
+        radial-gradient(1100px 520px at 15% 0%, rgba(167,139,250,.18), transparent 58%),
+        radial-gradient(900px 520px at 95% 25%, rgba(110,231,255,.14), transparent 58%),
+        linear-gradient(180deg,#070a14,var(--bg));
+    }
+
     header{
-      position:sticky; top:0; z-index:5;
+      position:sticky; top:0; z-index:20;
       border-bottom:1px solid var(--border);
-      background:rgba(7,10,20,.72); backdrop-filter: blur(14px);
+      background:rgba(7,10,20,.70);
+      backdrop-filter: blur(14px);
     }
-    .wrap{width:min(1200px,100%); margin:0 auto; padding:16px 18px;}
+    .wrap{width:min(1220px,100%); margin:0 auto; padding:16px 18px;}
     .topRow{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{display:flex; align-items:center; gap:10px;}
-    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));}
-    .pill{
-      border:1px solid var(--border); border-radius:999px;
-      background:rgba(255,255,255,.04); color:var(--text);
-      padding:8px 10px; font-size:12px; cursor:pointer; user-select:none;
+    .brand{display:flex; align-items:center; gap:12px;}
+    .logo{
+      width:40px;height:40px;border-radius:14px;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      box-shadow:0 14px 35px rgba(110,231,255,.14);
     }
-    .pill a{color:inherit;text-decoration:none}
-    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px;}
-    .card{
-      border:1px solid var(--border); border-radius:18px;
-      background:linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.62));
+    .brandTitle{font-weight:950; letter-spacing:.2px;}
+    .muted{color:var(--muted); font-size:12px; line-height:1.55;}
+
+    .navActions{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+    .chip{
+      border:1px solid var(--border);
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      padding:8px 12px;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+    }
+    .chip a{color:inherit;text-decoration:none}
+    .chip:hover{border-color: rgba(110,231,255,.30);}
+
+    main{padding-bottom:28px;}
+    .shellGrid{display:grid; grid-template-columns: 1fr; gap:14px; margin-top:14px;}
+
+    .tabs{
+      display:flex; gap:10px; flex-wrap:wrap;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(17,26,51,.60), rgba(17,26,51,.35));
+      box-shadow:var(--shadow2);
+    }
+    .tab{
+      border:1px solid rgba(255,255,255,.12);
+      background:rgba(255,255,255,.04);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:12px;
+      cursor:pointer;
+      user-select:none;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .tab:hover{border-color: rgba(110,231,255,.30);}
+    .tab.active{
+      border-color: rgba(110,231,255,.45);
+      background:linear-gradient(135deg, rgba(110,231,255,.16), rgba(167,139,250,.14));
+      box-shadow: 0 10px 22px rgba(110,231,255,.08);
+    }
+    .dot{
+      width:8px;height:8px;border-radius:99px;
+      background:rgba(255,255,255,.20);
+    }
+    .tab.active .dot{background: linear-gradient(135deg,var(--accent),var(--accent2));}
+
+    .panel{
+      border:1px solid var(--border);
+      border-radius:18px;
+      background:linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.58));
       box-shadow:var(--shadow);
       padding:14px;
+      display:none;
     }
+    .panel.show{display:block;}
+
+    .grid2{display:grid; grid-template-columns: 1fr 1fr; gap:14px;}
+    @media(max-width: 980px){ .grid2{grid-template-columns:1fr;} }
+
+    .card{
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:18px;
+      background:rgba(255,255,255,.03);
+      padding:14px;
+    }
+
     h1{margin:0;font-size:16px;}
-    .muted{color:var(--muted); font-size:12px; line-height:1.5;}
+    .sectionTitle{display:flex; align-items:center; justify-content:space-between; gap:10px;}
+    .rightBadge{
+      font-size:11px; color:var(--muted);
+      border:1px solid rgba(255,255,255,.12);
+      border-radius:999px;
+      padding:6px 10px;
+      background:rgba(255,255,255,.03);
+      height:fit-content;
+    }
+
     input, select, textarea, button{
-      width:100%; padding:11px 12px; border-radius:14px;
+      width:100%;
+      padding:11px 12px;
+      border-radius:14px;
       border:1px solid rgba(255,255,255,.14);
-      background:rgba(10,14,28,.55); color:var(--text);
+      background:rgba(10,14,28,.55);
+      color:var(--text);
       outline:none;
     }
-    textarea{min-height:90px; resize:vertical;}
-    button{
-      border:0; cursor:pointer; font-weight:950;
-      background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#07101a;
+    input:focus, select:focus, textarea:focus{
+      border-color: rgba(110,231,255,.55);
+      box-shadow:0 0 0 4px rgba(110,231,255,.10);
     }
-    button:disabled{opacity:.6; cursor:not-allowed;}
-    .ghost{background:transparent;color:var(--text);border:1px solid rgba(255,255,255,.14);}
+    textarea{min-height:110px; resize:vertical;}
+
     .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .box{
+    @media(max-width: 560px){ .row{grid-template-columns:1fr;} }
+
+    .btn{
+      border:0;
+      cursor:pointer;
+      font-weight:950;
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#07101a;
+      transition: transform .06s ease;
+    }
+    .btn:active{transform: translateY(1px);}
+    .btn:disabled{opacity:.6; cursor:not-allowed;}
+    .ghost{
+      background:transparent;
+      color:var(--text);
+      border:1px solid rgba(255,255,255,.14);
+      font-weight:900;
+    }
+    .ghost:hover{border-color: rgba(110,231,255,.28);}
+
+    .kpiGrid{display:grid; grid-template-columns: repeat(4, 1fr); gap:10px; margin-top:10px;}
+    @media(max-width: 980px){ .kpiGrid{grid-template-columns: repeat(2, 1fr);} }
+    @media(max-width: 520px){ .kpiGrid{grid-template-columns: 1fr;} }
+
+    .kpi{
       border:1px solid rgba(255,255,255,.12);
       background:rgba(255,255,255,.03);
       border-radius:16px;
       padding:12px;
-      margin-top:10px;
+      min-height:78px;
     }
-    .mini{
+    .kpi .label{font-size:12px;color:var(--muted);}
+    .kpi .val{font-size:18px;font-weight:950;margin-top:6px;}
+
+    .list{
+      margin-top:10px;
+      display:grid;
+      gap:10px;
+    }
+    .item{
       border:1px solid rgba(255,255,255,.10);
       background:rgba(255,255,255,.02);
-      border-radius:14px;
+      border-radius:16px;
+      padding:12px;
+    }
+    .itemTop{display:flex; justify-content:space-between; gap:12px; align-items:flex-start;}
+    .itemTitle{font-weight:950;}
+    .tag{
+      font-size:11px; padding:6px 8px; border-radius:999px;
+      border:1px solid rgba(255,255,255,.14);
+      color:var(--muted); height:fit-content; white-space:nowrap;
+    }
+    .tag.ok{color:#d7fff0;border-color:rgba(92,255,199,.30);}
+    .tag.warn{color:#fff2d7;border-color:rgba(255,213,106,.30);}
+    .tag.bad{color:#ffd7d7;border-color:rgba(255,107,107,.35);}
+
+    code{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size:12px;
+      color:#dbe7ff;
+    }
+    .help{
+      margin-top:8px;
       padding:10px;
+      border:1px dashed rgba(255,255,255,.16);
+      border-radius:14px;
+      background:rgba(255,255,255,.02);
+    }
+
+    .split{
+      display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between;
       margin-top:10px;
     }
-    .tag{font-size:11px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14); color:var(--muted); height:fit-content;}
-    .txRow{display:flex; justify-content:space-between; gap:10px; align-items:flex-start;}
-    @media(max-width: 980px){ .grid{grid-template-columns:1fr;} .row{grid-template-columns:1fr;} }
+
+    .dangerText{color:var(--danger);}
   </style>
 </head>
+
 <body>
 <header>
   <div class="wrap">
@@ -76,82 +224,218 @@
       <div class="brand">
         <div class="logo"></div>
         <div>
-          <div style="font-weight:950;">Admin Panel</div>
+          <div class="brandTitle">Admin Panel</div>
           <div id="me" class="muted">Loading...</div>
         </div>
       </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <span class="pill"><a href="/app">Katalog</a></span>
-        <span class="pill"><a href="/billing">Premium</a></span>
-        <span class="pill" id="btnLogout">Logout</span>
+
+      <div class="navActions">
+        <span class="chip"><a href="/app">Katalog</a></span>
+        <span class="chip"><a href="/billing">Premium</a></span>
+        <span class="chip" id="btnLogout">Logout</span>
       </div>
     </div>
   </div>
 </header>
 
 <main class="wrap">
-  <div class="grid">
-    <section class="card">
-      <h1>Profit & Statistik</h1>
-      <div class="muted">Rekap transaksi PAID (sederhana).</div>
-      <div id="stats" class="box">Loading...</div>
+  <div class="shellGrid">
 
-      <div class="box">
-        <h1 style="margin:0 0 6px;">Gift Premium ke User</h1>
-        <div class="row">
-          <input id="giftUser" placeholder="username target (lowercase)" />
-          <input id="giftDays" type="number" value="30" min="1" max="365" />
-        </div>
-        <button id="btnGift" style="margin-top:10px;">Give Premium</button>
-        <div id="giftMsg" class="muted" style="margin-top:8px;"></div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h1>Tambah / Update Konten</h1>
-      <div class="muted">
-        Tambahkan konten legal milik Anda (URL video langsung atau embed). Episode ditulis dalam format JSON.
-      </div>
-
-      <div class="row" style="margin-top:10px;">
-        <select id="type">
-          <option value="anime">Anime</option>
-          <option value="donghua">Donghua</option>
-          <option value="drakor">Drakor</option>
-          <option value="dracin">Dracin</option>
-        </select>
-        <input id="title" placeholder="Judul" />
-      </div>
-
-      <input id="coverUrl" placeholder="Cover URL (opsional)" style="margin-top:10px;" />
-      <input id="genres" placeholder="Genre (pisahkan koma). contoh: action, fantasy" style="margin-top:10px;" />
-      <textarea id="synopsis" placeholder="Sinopsis (opsional)" style="margin-top:10px;"></textarea>
-
-      <div class="box">
-        <div style="font-weight:950;">Episodes JSON</div>
-        <div class="muted" style="margin-top:6px;">
-          Contoh:
-          <code>
-            [{"episodeNumber":1,"title":"Eps 1","videoUrl":"https://...mp4","thumbUrl":""}]
-          </code>
-        </div>
-        <textarea id="episodes" placeholder='[{"episodeNumber":1,"title":"Eps 1","videoUrl":"https://...","thumbUrl":""}]'
-                  style="margin-top:10px; min-height:140px;"></textarea>
-      </div>
-
-      <button id="btnUpsert" style="margin-top:10px;">Simpan Konten</button>
-      <div id="upsertMsg" class="muted" style="margin-top:8px;"></div>
-    </section>
-  </div>
-
-  <section class="card" style="margin-top:14px;">
-    <h1>Verifikasi Transaksi (Manual)</h1>
-    <div class="muted">
-      Transaksi dibuat user sebagai PENDING. Admin dapat mengubah menjadi PAID/REJECTED.
-      Saat PAID, sistem otomatis menambahkan masa premium user.
+    <!-- Tabs -->
+    <div class="tabs" role="tablist" aria-label="Admin Tabs">
+      <div class="tab active" data-tab="tab-dashboard"><span class="dot"></span> Dashboard</div>
+      <div class="tab" data-tab="tab-content"><span class="dot"></span> Konten</div>
+      <div class="tab" data-tab="tab-episode"><span class="dot"></span> Episode</div>
+      <div class="tab" data-tab="tab-transactions"><span class="dot"></span> Transaksi</div>
     </div>
-    <div id="txList"></div>
-  </section>
+
+    <!-- Dashboard -->
+    <section id="tab-dashboard" class="panel show">
+      <div class="grid2">
+        <div class="card">
+          <div class="sectionTitle">
+            <h1>Profit & Statistik</h1>
+            <span class="rightBadge">Rekap transaksi PAID</span>
+          </div>
+
+          <div id="kpis" class="kpiGrid">
+            <div class="kpi"><div class="label">User</div><div class="val">—</div></div>
+            <div class="kpi"><div class="label">Konten</div><div class="val">—</div></div>
+            <div class="kpi"><div class="label">PAID</div><div class="val">—</div></div>
+            <div class="kpi"><div class="label">Revenue</div><div class="val">—</div></div>
+          </div>
+
+          <div class="help muted">
+            Tips: gunakan tab <b>Episode</b> untuk menambah episode tanpa “upload ulang” data konten.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <h1>Gift Premium</h1>
+            <span class="rightBadge">Manual grant</span>
+          </div>
+          <div class="muted">Beri premium ke user (tanpa transaksi).</div>
+
+          <div class="row" style="margin-top:10px;">
+            <input id="giftUser" placeholder="username target (lowercase)" />
+            <input id="giftDays" type="number" value="30" min="1" max="365" />
+          </div>
+
+          <button id="btnGift" class="btn" style="margin-top:10px;">Give Premium</button>
+          <div id="giftMsg" class="muted" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content Upsert -->
+    <section id="tab-content" class="panel">
+      <div class="grid2">
+        <div class="card">
+          <div class="sectionTitle">
+            <h1>Tambah / Update Konten</h1>
+            <span class="rightBadge">Upsert</span>
+          </div>
+
+          <div class="muted">
+            Buat konten baru atau update konten (episode via JSON). Untuk tambah episode tanpa upload ulang, gunakan tab <b>Episode</b>.
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <select id="type">
+              <option value="anime">Anime</option>
+              <option value="donghua">Donghua</option>
+              <option value="drakor">Drakor</option>
+              <option value="dracin">Dracin</option>
+            </select>
+            <input id="title" placeholder="Judul" />
+          </div>
+
+          <input id="coverUrl" placeholder="Cover URL (opsional)" style="margin-top:10px;" />
+          <input id="genres" placeholder="Genre (pisahkan koma). contoh: action, fantasy" style="margin-top:10px;" />
+          <textarea id="synopsis" placeholder="Sinopsis (opsional)" style="margin-top:10px;"></textarea>
+
+          <div class="help">
+            <div style="font-weight:950;">Episodes JSON</div>
+            <div class="muted" style="margin-top:6px;">
+              Contoh:
+              <code>[{"episodeNumber":1,"title":"Eps 1","videoUrl":"https://...mp4","thumbUrl":""}]</code>
+            </div>
+            <textarea id="episodes" placeholder='[{"episodeNumber":1,"title":"Eps 1","videoUrl":"https://...","thumbUrl":""}]'
+              style="margin-top:10px; min-height:160px;"></textarea>
+          </div>
+
+          <button id="btnUpsert" class="btn" style="margin-top:10px;">Simpan Konten</button>
+          <div id="upsertMsg" class="muted" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <h1>Catatan Operasional</h1>
+            <span class="rightBadge">Guideline</span>
+          </div>
+          <div class="muted">
+            1) Isi konten yang legal/berlisensi. <br/>
+            2) <b>videoUrl</b> bisa direct mp4 atau embed URL. <br/>
+            3) Untuk Vercel, pastikan MongoDB Atlas allow network & env terisi.
+          </div>
+
+          <div class="help muted" style="margin-top:10px;">
+            Endpoint penting:
+            <div style="margin-top:8px;">
+              <code>/api/admin/content/upsert</code><br/>
+              <code>/api/admin/content/add-episode</code><br/>
+              <code>/api/admin/transactions</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Episode Append -->
+    <section id="tab-episode" class="panel">
+      <div class="grid2">
+        <div class="card">
+          <div class="sectionTitle">
+            <h1>Tambah Episode (Append)</h1>
+            <span class="rightBadge">Tanpa upload ulang</span>
+          </div>
+          <div class="muted">
+            Pilih konten yang sudah ada, lalu tambahkan episode baru. Sistem akan menolak jika episode number sudah ada.
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <select id="pickType">
+              <option value="anime">Anime</option>
+              <option value="donghua">Donghua</option>
+              <option value="drakor">Drakor</option>
+              <option value="dracin">Dracin</option>
+            </select>
+            <select id="pickContent">
+              <option value="">— pilih konten —</option>
+            </select>
+          </div>
+
+          <div class="row" style="margin-top:10px;">
+            <input id="epNumber" type="number" min="1" placeholder="Episode number (mis: 12)" />
+            <input id="epTitle" placeholder="Judul episode (opsional)" />
+          </div>
+
+          <input id="epVideoUrl" placeholder="Video URL (mp4 atau embed url)" style="margin-top:10px;" />
+          <input id="epThumbUrl" placeholder="Thumb URL (opsional)" style="margin-top:10px;" />
+
+          <div class="split">
+            <button id="btnReloadPicker" class="ghost" type="button" style="width:auto; padding:10px 12px;">Refresh List</button>
+            <span class="muted">Disarankan limit list 200 judul per tipe.</span>
+          </div>
+
+          <button id="btnAddEpisode" class="btn" style="margin-top:10px;">Tambah Episode</button>
+          <div id="addEpMsg" class="muted" style="margin-top:8px;"></div>
+        </div>
+
+        <div class="card">
+          <div class="sectionTitle">
+            <h1>Validasi Cepat</h1>
+            <span class="rightBadge">Quality gate</span>
+          </div>
+          <div class="muted">
+            Jika episode tidak bisa diputar di halaman watch, biasanya karena:
+            <ul style="margin:8px 0 0 18px; padding:0; color:var(--muted);">
+              <li>URL bukan direct mp4 (pakai embed URL).</li>
+              <li>Hosting video menolak hotlink (butuh CDN / signed URL).</li>
+              <li>Mixed content (http) saat domain https.</li>
+            </ul>
+          </div>
+
+          <div class="help muted" style="margin-top:10px;">
+            Status:
+            <div style="margin-top:8px;">
+              <span class="tag ok">OK</span>
+              <span class="tag warn">WARN</span>
+              <span class="tag bad">ERROR</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Transactions -->
+    <section id="tab-transactions" class="panel">
+      <div class="card">
+        <div class="sectionTitle">
+          <h1>Verifikasi Transaksi (Manual)</h1>
+          <span class="rightBadge">PAID/REJECTED</span>
+        </div>
+        <div class="muted">
+          Transaksi dibuat user sebagai PENDING. Admin dapat mengubah menjadi PAID/REJECTED.
+          Saat PAID, sistem otomatis menambahkan masa premium user.
+        </div>
+
+        <div id="txList" class="list"></div>
+      </div>
+    </section>
+
+  </div>
 </main>
 
 <script src="/public/js/admin.js"></script>
