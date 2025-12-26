@@ -20,66 +20,64 @@ function fmtIDR(n){
   return "Rp " + x.toLocaleString("id-ID");
 }
 
+/* ---------- Tabs ---------- */
+function initTabs(){
+  const tabs = Array.from(document.querySelectorAll(".tab"));
+  const panels = Array.from(document.querySelectorAll(".panel"));
+  function show(id){
+    tabs.forEach(t => t.classList.toggle("active", t.dataset.tab === id));
+    panels.forEach(p => p.classList.toggle("show", p.id === id));
+  }
+  tabs.forEach(t => t.addEventListener("click", () => show(t.dataset.tab)));
+}
+
+/* ---------- Auth ---------- */
 async function loadMe(){
   const { user } = await getJSON("/api/auth/me");
   if (!user) { window.location.href = "/login"; return; }
   if (!user.isAdmin) { alert("Akses admin ditolak."); window.location.href = "/app"; return; }
-  document.getElementById("me").textContent =
-    `${user.username} • Admin • ${user.premiumActive ? "Premium Active" : "Free"}`;
+  const me = document.getElementById("me");
+  if (me) me.textContent = `${user.username} • Admin • ${user.premiumActive ? "Premium Active" : "Free"}`;
 }
 
+/* ---------- Stats/KPI ---------- */
 async function loadStats(){
   const s = await getJSON("/api/admin/stats");
-  document.getElementById("stats").innerHTML = `
-    <div class="txRow">
-      <div>
-        <div style="font-weight:950;">User</div>
-        <div class="muted">${esc(s.userCount)}</div>
-      </div>
-      <span class="tag">COUNT</span>
-    </div>
+  const kpis = document.getElementById("kpis");
+  if (!kpis) return;
 
-    <div class="txRow" style="margin-top:10px;">
-      <div>
-        <div style="font-weight:950;">Konten</div>
-        <div class="muted">${esc(s.contentCount)}</div>
-      </div>
-      <span class="tag">COUNT</span>
-    </div>
-
-    <div class="txRow" style="margin-top:10px;">
-      <div>
-        <div style="font-weight:950;">Transaksi PAID</div>
-        <div class="muted">${esc(s.paidTxCount)}</div>
-      </div>
-      <span class="tag">PAID</span>
-    </div>
-
-    <div class="txRow" style="margin-top:10px;">
-      <div>
-        <div style="font-weight:950;">Revenue (Profit)</div>
-        <div class="muted">${esc(fmtIDR(s.revenueIDR))}</div>
-      </div>
-      <span class="tag">IDR</span>
-    </div>
-  `;
+  const cells = kpis.querySelectorAll(".kpi .val");
+  if (cells.length >= 4){
+    cells[0].textContent = String(s.userCount ?? "—");
+    cells[1].textContent = String(s.contentCount ?? "—");
+    cells[2].textContent = String(s.paidTxCount ?? "—");
+    cells[3].textContent = fmtIDR(s.revenueIDR ?? 0);
+  }
 }
 
+/* ---------- Transactions ---------- */
 function txCard(tx){
   const who = tx.userId && tx.userId.username ? tx.userId.username : "-";
   const created = tx.createdAt ? new Date(tx.createdAt).toLocaleString("id-ID") : "-";
+
+  const status = String(tx.status || "");
+  const tagClass =
+    status === "PAID" ? "tag ok" :
+    status === "REJECTED" ? "tag bad" :
+    "tag warn";
+
   return `
-    <div class="mini">
-      <div class="txRow">
+    <div class="item">
+      <div class="itemTop">
         <div>
-          <div style="font-weight:950;">${esc(who)} • ${esc(tx.plan)} • ${esc(fmtIDR(tx.amountIDR))}</div>
-          <div class="muted">Metode: ${esc(tx.method)} • ${esc(created)} • TX: ${esc(tx._id)}</div>
+          <div class="itemTitle">${esc(who)} • ${esc(tx.plan)} • ${esc(fmtIDR(tx.amountIDR))}</div>
+          <div class="muted">Metode: ${esc(tx.method)} • ${esc(created)} • TX: <code>${esc(tx._id)}</code></div>
         </div>
-        <span class="tag">${esc(tx.status)}</span>
+        <span class="${tagClass}">${esc(status)}</span>
       </div>
 
       <div class="row" style="margin-top:10px;">
-        <button onclick="window.markTx('${esc(tx._id)}','PAID')">Mark PAID</button>
+        <button class="btn" onclick="window.markTx('${esc(tx._id)}','PAID')">Mark PAID</button>
         <button class="ghost" onclick="window.markTx('${esc(tx._id)}','REJECTED')">Reject</button>
       </div>
     </div>
@@ -89,7 +87,9 @@ function txCard(tx){
 async function loadTx(){
   const { items } = await getJSON("/api/admin/transactions");
   const box = document.getElementById("txList");
-  if (!items.length) {
+  if (!box) return;
+
+  if (!items || !items.length) {
     box.innerHTML = `<div class="muted" style="margin-top:10px;">Belum ada transaksi.</div>`;
     return;
   }
@@ -103,61 +103,177 @@ window.markTx = async (txId, status) => {
   await loadTx();
 };
 
-document.getElementById("btnGift").addEventListener("click", async ()=>{
-  const u = document.getElementById("giftUser").value.trim();
-  const days = Number(document.getElementById("giftDays").value || 30);
-  const msg = document.getElementById("giftMsg");
-  msg.textContent = "Processing...";
-  try{
-    const r = await postJSON("/api/admin/users/give-premium", { username: u, days });
-    msg.textContent = `Sukses. Premium until: ${new Date(r.premiumUntil).toLocaleString("id-ID")}`;
-  } catch(e){
-    msg.textContent = "Gagal. Pastikan username benar dan days 1-365.";
-  }
-});
+/* ---------- Gift Premium ---------- */
+function initGift(){
+  const btn = document.getElementById("btnGift");
+  if (!btn) return;
 
-document.getElementById("btnUpsert").addEventListener("click", async ()=>{
+  btn.addEventListener("click", async ()=>{
+    const u = (document.getElementById("giftUser")?.value || "").trim();
+    const days = Number(document.getElementById("giftDays")?.value || 30);
+    const msg = document.getElementById("giftMsg");
+    if (msg) msg.textContent = "Processing...";
+
+    try{
+      const r = await postJSON("/api/admin/users/give-premium", { username: u, days });
+      if (msg) msg.textContent = `Sukses. Premium until: ${new Date(r.premiumUntil).toLocaleString("id-ID")}`;
+    } catch(e){
+      if (msg) msg.textContent = "Gagal. Pastikan username benar dan days 1-365.";
+    }
+  });
+}
+
+/* ---------- Content Upsert ---------- */
+function initUpsert(){
   const btn = document.getElementById("btnUpsert");
-  const msg = document.getElementById("upsertMsg");
-  btn.disabled = true;
-  msg.textContent = "Saving...";
+  if (!btn) return;
 
-  const type = document.getElementById("type").value;
-  const title = document.getElementById("title").value.trim();
-  const coverUrl = document.getElementById("coverUrl").value.trim();
-  const genres = document.getElementById("genres").value.trim();
-  const synopsis = document.getElementById("synopsis").value.trim();
-  const episodesText = document.getElementById("episodes").value.trim();
+  btn.addEventListener("click", async ()=>{
+    const msg = document.getElementById("upsertMsg");
+    btn.disabled = true;
+    if (msg) msg.textContent = "Saving...";
 
-  let episodes = [];
-  try{
-    episodes = episodesText ? JSON.parse(episodesText) : [];
-    if (!Array.isArray(episodes)) throw new Error("episodes not array");
-  } catch {
-    msg.textContent = "Episodes JSON tidak valid.";
-    btn.disabled = false;
+    const type = document.getElementById("type")?.value;
+    const title = (document.getElementById("title")?.value || "").trim();
+    const coverUrl = (document.getElementById("coverUrl")?.value || "").trim();
+    const genres = (document.getElementById("genres")?.value || "").trim();
+    const synopsis = (document.getElementById("synopsis")?.value || "").trim();
+    const episodesText = (document.getElementById("episodes")?.value || "").trim();
+
+    let episodes = [];
+    try{
+      episodes = episodesText ? JSON.parse(episodesText) : [];
+      if (!Array.isArray(episodes)) throw new Error("episodes not array");
+    } catch {
+      if (msg) msg.textContent = "Episodes JSON tidak valid.";
+      btn.disabled = false;
+      return;
+    }
+
+    try{
+      const r = await postJSON("/api/admin/content/upsert", {
+        type, title, coverUrl, genres, synopsis, episodes
+      });
+      if (msg) msg.textContent = `Sukses. Content ID: ${r.item._id}`;
+      await loadStats();
+    } catch(e){
+      if (msg) msg.textContent = "Gagal menyimpan. Periksa field wajib dan URL episode.";
+    } finally{
+      btn.disabled = false;
+    }
+  });
+}
+
+/* ---------- Episode Append (NEW) ---------- */
+async function loadContentsToPicker(){
+  const type = document.getElementById("pickType")?.value || "anime";
+  const sel = document.getElementById("pickContent");
+  if (!sel) return;
+
+  sel.innerHTML = `<option value="">Loading...</option>`;
+
+  // Pakai endpoint /api/content yang kamu sudah punya (dipakai katalog)
+  // limit dibuat besar tapi tetap wajar.
+  const data = await getJSON(`/api/content?type=${encodeURIComponent(type)}&q=&genre=&page=1&limit=200`);
+
+  const items = data.items || [];
+  if (!items.length) {
+    sel.innerHTML = `<option value="">(belum ada konten)</option>`;
     return;
   }
 
-  try{
-    const r = await postJSON("/api/admin/content/upsert", {
-      type, title, coverUrl, genres, synopsis, episodes
-    });
-    msg.textContent = `Sukses. Content ID: ${r.item._id}`;
-  } catch(e){
-    msg.textContent = "Gagal menyimpan. Periksa field wajib dan URL episode.";
-  } finally{
-    btn.disabled = false;
-  }
-});
+  sel.innerHTML =
+    `<option value="">— pilih konten —</option>` +
+    items.map(it => `<option value="${esc(it._id)}">${esc(it.title)}</option>`).join("");
+}
 
-document.getElementById("btnLogout").addEventListener("click", async ()=>{
-  await postJSON("/api/auth/logout");
-  window.location.href = "/login";
-});
+function initEpisodeAppend(){
+  const pickType = document.getElementById("pickType");
+  const btnReload = document.getElementById("btnReloadPicker");
+  const btnAdd = document.getElementById("btnAddEpisode");
 
+  if (pickType) pickType.addEventListener("change", loadContentsToPicker);
+  if (btnReload) btnReload.addEventListener("click", loadContentsToPicker);
+
+  if (!btnAdd) return;
+
+  btnAdd.addEventListener("click", async ()=>{
+    const msg = document.getElementById("addEpMsg");
+    if (msg) msg.textContent = "Processing...";
+    btnAdd.disabled = true;
+
+    const contentId = document.getElementById("pickContent")?.value || "";
+    const episodeNumber = Number(document.getElementById("epNumber")?.value || 0);
+    const title = (document.getElementById("epTitle")?.value || "").trim();
+    const videoUrl = (document.getElementById("epVideoUrl")?.value || "").trim();
+    const thumbUrl = (document.getElementById("epThumbUrl")?.value || "").trim();
+
+    if (!contentId) {
+      if (msg) msg.textContent = "Pilih konten dulu.";
+      btnAdd.disabled = false;
+      return;
+    }
+    if (!episodeNumber || episodeNumber < 1) {
+      if (msg) msg.textContent = "Episode number wajib (>=1).";
+      btnAdd.disabled = false;
+      return;
+    }
+    if (!videoUrl) {
+      if (msg) msg.textContent = "Video URL wajib.";
+      btnAdd.disabled = false;
+      return;
+    }
+
+    try{
+      await postJSON("/api/admin/content/add-episode", {
+        contentId,
+        episode: { episodeNumber, title, videoUrl, thumbUrl }
+      });
+
+      if (msg) msg.textContent = `Sukses tambah episode ${episodeNumber}.`;
+      const epTitle = document.getElementById("epTitle");
+      const epVideoUrl = document.getElementById("epVideoUrl");
+      const epThumbUrl = document.getElementById("epThumbUrl");
+      const epNumber = document.getElementById("epNumber");
+      if (epTitle) epTitle.value = "";
+      if (epVideoUrl) epVideoUrl.value = "";
+      if (epThumbUrl) epThumbUrl.value = "";
+      if (epNumber) epNumber.value = "";
+
+    } catch(e){
+      const map = {
+        BAD_INPUT: "Input tidak valid.",
+        NOT_FOUND: "Konten tidak ditemukan.",
+        DUP_EP: "Episode number sudah ada."
+      };
+      if (msg) msg.textContent = map[e.error] || "Gagal menambah episode.";
+    } finally{
+      btnAdd.disabled = false;
+    }
+  });
+}
+
+/* ---------- Logout ---------- */
+function initLogout(){
+  const btn = document.getElementById("btnLogout");
+  if (!btn) return;
+
+  btn.addEventListener("click", async ()=>{
+    await postJSON("/api/auth/logout");
+    window.location.href = "/login";
+  });
+}
+
+/* ---------- Boot ---------- */
 (async ()=>{
+  initTabs();
+  initGift();
+  initUpsert();
+  initEpisodeAppend();
+  initLogout();
+
   await loadMe();
   await loadStats();
   await loadTx();
+  await loadContentsToPicker();
 })();
