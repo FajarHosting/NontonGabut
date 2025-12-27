@@ -1,5 +1,25 @@
 const mongoose = require("mongoose");
 
+const UnlockedSchema = new mongoose.Schema(
+  {
+    contentId: { type: mongoose.Schema.Types.ObjectId, ref: "Content" },
+    episode: { type: Number, required: true },
+    unlockedAt: { type: Date, default: Date.now }
+  },
+  { _id: false }
+);
+
+const HistorySchema = new mongoose.Schema(
+  {
+    contentId: { type: mongoose.Schema.Types.ObjectId, ref: "Content" },
+    title: { type: String, default: "" },
+    coverUrl: { type: String, default: "" },
+    episode: { type: Number, default: 1 },
+    watchedAt: { type: Date, default: Date.now }
+  },
+  { _id: false }
+);
+
 const UserSchema = new mongoose.Schema(
   {
     username: { type: String, unique: true, index: true, required: true, trim: true },
@@ -7,20 +27,15 @@ const UserSchema = new mongoose.Schema(
 
     isAdmin: { type: Boolean, default: false },
 
-    // Premium
+    avatarUrl: { type: String, default: "" },
+
     premiumUntil: { type: Date, default: null },
 
-    // Free episode policy (per account)
     freeEpisodesLimit: { type: Number, default: 10 },
 
-    // Track unlocks via "watch ad" (episode-level unlock)
-    unlockedEpisodes: [
-      {
-        contentId: { type: mongoose.Schema.Types.ObjectId, ref: "Content" },
-        episode: Number,
-        unlockedAt: Date
-      }
-    ]
+    unlockedEpisodes: { type: [UnlockedSchema], default: [] },
+
+    watchHistory: { type: [HistorySchema], default: [] }
   },
   { timestamps: true }
 );

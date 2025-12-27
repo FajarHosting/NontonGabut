@@ -4,9 +4,7 @@ const EpisodeSchema = new mongoose.Schema(
   {
     episodeNumber: { type: Number, required: true },
     title: { type: String, default: "" },
-    // URL video legal (milik sendiri / berlisensi)
     videoUrl: { type: String, required: true },
-    // thumbnail optional per episode
     thumbUrl: { type: String, default: "" }
   },
   { _id: false }
