@@ -7,7 +7,12 @@ const TransactionSchema = new mongoose.Schema(
     amountIDR: { type: Number, required: true },
     method: { type: String, enum: ["qris", "dana", "seabank"], required: true },
     status: { type: String, enum: ["PENDING", "PAID", "REJECTED"], default: "PENDING" },
-    note: { type: String, default: "" }
+
+    // Bukti transaksi (opsional). Disarankan: kompres di browser → simpan DataURL kecil.
+    proofDataUrl: { type: String, default: "" }, // contoh: data:image/jpeg;base64,...
+    proofUrl: { type: String, default: "" },     // contoh: https://drive.google.com/...
+    proofFileName: { type: String, default: "" },
+    proofUploadedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
