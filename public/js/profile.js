@@ -38,6 +38,56 @@ const meta = document.getElementById("meta");
 const payBox = document.getElementById("payBox");
 const txBox = document.getElementById("txBox");
 
+/* ===== COPY BUTTON (data-copy="...") ===== */
+async function copyTextToClipboard(text) {
+  const t = String(text ?? "");
+  try {
+    await navigator.clipboard.writeText(t);
+    return true;
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = t;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      document.body.removeChild(ta);
+      return false;
+    }
+  }
+}
+function showCopyToast(text) {
+  let el = document.getElementById("copyToast");
+  if (!el) {
+    el = document.createElement("div");
+    el.id = "copyToast";
+    el.style.cssText =
+      "position:fixed;left:50%;bottom:18px;transform:translateX(-50%);" +
+      "background:rgba(0,0,0,.75);color:#fff;padding:10px 12px;border-radius:12px;" +
+      "font-weight:900;font-size:12px;z-index:9999;max-width:92vw;text-align:center;" +
+      "backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.16)";
+    document.body.appendChild(el);
+  }
+  el.textContent = text;
+  el.style.display = "block";
+  clearTimeout(window.__copyToastTimer);
+  window.__copyToastTimer = setTimeout(() => (el.style.display = "none"), 1100);
+}
+document.addEventListener("click", async (e) => {
+  const b = e.target.closest("[data-copy]");
+  if (!b) return;
+  const val = b.getAttribute("data-copy") || "";
+  const ok = await copyTextToClipboard(val);
+  showCopyToast(ok ? "Copied" : "Gagal copy");
+});
+/* ===== END COPY ===== */
+
 async function compressImageToDataUrl(file, maxW = 1280, maxBytes = 950000) {
   const img = await new Promise((resolve, reject) => {
     const i = new Image();
@@ -131,7 +181,6 @@ function renderTx(list) {
     </table>
     <div class="small" style="margin-top:10px;opacity:.95">
       Tips: setelah kamu <b>Buat Pembayaran</b> dan transfer, upload bukti di transaksi <b>PENDING</b>.
-      Admin akan lihat bukti + username kamu di panel admin, lalu set <b>PAID</b>.
     </div>
   `;
 }
@@ -190,13 +239,35 @@ window.createTx = async function () {
 
     const out = await postJSON("/api/billing/create", { plan, method });
 
+    const copyFields = (out.payment && out.payment.copyFields) ? out.payment.copyFields : [];
+    const fieldsHTML = copyFields
+      .filter(f => String(f.value || "").trim())
+      .map(f => `
+        <div style="margin-top:10px">
+          <div class="small" style="opacity:.9">${esc(f.label)}</div>
+          <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:6px">
+            <code style="padding:6px 10px;border-radius:12px;background:rgba(0,0,0,.35);border:1px solid rgba(255,255,255,.12)">${esc(f.value)}</code>
+            <button class="primary" style="padding:9px 12px" data-copy="${esc(f.value)}">Copy</button>
+          </div>
+        </div>
+      `)
+      .join("");
+
     payBox.innerHTML = `
       <div style="border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px">
         <div style="font-weight:900">${esc(out.payment.title)}</div>
-        <div class="small">TX ID: <code>${esc(out.txId)}</code></div>
+
+        <div class="small" style="margin-top:6px">
+          TX ID: <code>${esc(out.txId)}</code>
+          <button class="primary" style="padding:9px 12px;margin-left:8px" data-copy="${esc(out.txId)}">Copy TX</button>
+        </div>
+
+        ${fieldsHTML}
+
         <div style="margin-top:10px">
           <img src="${esc(out.payment.imageUrl)}" style="width:220px;max-width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.12)">
         </div>
+
         <div class="small" style="margin-top:10px">${esc(out.payment.text)}</div>
         <div class="small" style="margin-top:10px">
           Setelah transfer, upload bukti di <b>Riwayat Transaksi</b> (status PENDING).
@@ -205,7 +276,12 @@ window.createTx = async function () {
     `;
     await load();
   } catch (e) {
-    payBox.innerHTML = `<div class="small">Gagal membuat transaksi: ${esc(e.error || "error")}</div>`;
+    const code = e && e.error ? e.error : "error";
+    if (code === "PAYMENT_ACCOUNT_NOT_SET") {
+      payBox.innerHTML = `<div class="small">Nomor pembayaran belum diset di ENV (DANA_NUMBER / SEABANK_ACCOUNT).</div>`;
+      return;
+    }
+    payBox.innerHTML = `<div class="small">Gagal membuat transaksi: ${esc(code)}</div>`;
   }
 };
 
