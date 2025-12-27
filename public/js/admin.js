@@ -16,53 +16,100 @@ async function logout() {
   location.href = "/login";
 }
 
-async function guardAdmin() {
-  const me = await getJSON("/api/auth/me");
-  if (!me.user) location.href = "/login";
-  if (!me.user.isAdmin) location.href = "/app";
+async function loadMovies() {
+  const data = await getJSON("/api/admin/movies");
+  moviePick.innerHTML = data.items
+    .map((m) => `<option value="${m._id}">${m.title} (${m.type}) • ep:${m.episodesCount}</option>`)
+    .join("");
 }
 
-async function loadContents() {
-  const data = await getJSON("/api/admin/contents");
-  contentId.innerHTML = data.items.map(i => `<option value="${i._id}">${i.title} (${i.type}) • ep:${i.episodeCount}</option>`).join("");
-}
-
-async function addContent() {
-  msg1.textContent = "";
+async function createMovie() {
+  msgMovie.textContent = "";
   try {
-    await postJSON("/api/admin/content", {
+    await postJSON("/api/admin/movies", {
       title: title.value,
       type: type.value,
       coverUrl: coverUrl.value,
       genres: genres.value,
       synopsis: synopsis.value
     });
-    msg1.textContent = "Film ditambahkan.";
-    await loadContents();
+    msgMovie.textContent = "Film berhasil ditambahkan.";
+    title.value = coverUrl.value = genres.value = synopsis.value = "";
+    await loadMovies();
   } catch (e) {
-    msg1.textContent = e.error || "Gagal menambah film.";
+    msgMovie.textContent = e.error || "Error";
   }
 }
 
 async function addEpisode() {
-  msg2.textContent = "";
+  msgEp.textContent = "";
   try {
-    await postJSON("/api/admin/content/add-episode", {
-      contentId: contentId.value,
-      episode: {
-        episodeNumber: Number(epNum.value),
-        videoUrl: videoUrl.value,
-        title: epTitle.value,
-        thumbUrl: thumbUrl.value
-      }
+    await postJSON("/api/admin/episodes", {
+      movieId: moviePick.value,
+      epNo: epNo.value,
+      videoUrl: epUrl.value,
+      title: epTitle.value,
+      thumbUrl: epThumb.value
     });
-    msg2.textContent = "Episode ditambahkan.";
-    await loadContents();
+    msgEp.textContent = "Episode berhasil ditambahkan.";
+    epNo.value = epUrl.value = epTitle.value = epThumb.value = "";
+    await loadMovies();
   } catch (e) {
-    msg2.textContent = e.error || "Gagal menambah episode.";
+    msgEp.textContent = e.error || "Error";
   }
 }
 
+async function markPaid(txId) {
+  if (!confirm("Mark PAID dan grant premium?")) return;
+  try {
+    await postJSON("/api/admin/mark-paid", { txId });
+    await loadTx();
+    await loadUsers();
+  } catch (e) {
+    alert(e.error || "Error");
+  }
+}
+
+async function grantPremium() {
+  msgGrant.textContent = "";
+  try {
+    const out = await postJSON("/api/admin/grant", { username: grantUser.value, days: grantDays.value });
+    msgGrant.textContent = `OK. premiumUntil: ${new Date(out.premiumUntil).toLocaleString()}`;
+    await loadUsers();
+  } catch (e) {
+    msgGrant.textContent = e.error || "Error";
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+// ===== Proof modal =====
+function closeProof(evt) {
+  if (evt && evt.target && evt.target.id !== "proofModal") return;
+  proofModal.style.display = "none";
+  proofBody.innerHTML = "";
+}
+
+async function openProof(txId) {
+  const data = await getJSON("/api/admin/transactions?status=PENDING");
+  const tx = (data.items || []).find((x) => String(x._id) === String(txId));
+  if (!tx) return;
+
+  const src = tx.proofDataUrl || tx.proofUrl || "";
+  proofBody.innerHTML = src
+    ? `
+      <div class="small" style="margin-bottom:8px">TX ID: <b>${escapeHtml(txId)}</b></div>
+      <div class="small" style="margin-bottom:10px">User: <b>${escapeHtml(tx.user?.username || tx.userId || "-")}</b></div>
+      <img src="${escapeHtml(src)}" alt="bukti">
+      ${tx.proofUrl ? `<div style="margin-top:10px"><a class="link" href="${escapeHtml(tx.proofUrl)}" target="_blank" rel="noopener">Buka link bukti</a></div>` : ""}
+    `
+    : `<div class="small">Belum ada bukti.</div>`;
+  proofModal.style.display = "flex";
+}
+
+// ===== Tables =====
 async function loadTx() {
   const data = await getJSON("/api/admin/transactions?status=PENDING");
   if (!data.items.length) {
@@ -71,38 +118,89 @@ async function loadTx() {
   }
   txTable.innerHTML = `
     <table>
-      <tr><th>TX ID</th><th>User</th><th>Plan</th><th>Method</th><th>Action</th></tr>
-      ${data.items.map(t => `
+      <tr>
+        <th>TX ID</th>
+        <th>User</th>
+        <th>Plan</th>
+        <th>Method</th>
+        <th>Nominal</th>
+        <th>Bukti</th>
+        <th>Action</th>
+      </tr>
+      ${data.items
+        .map(
+          (t) => `
         <tr>
           <td>${t._id}</td>
-          <td>${t.userId}</td>
+          <td>
+            <div style="font-weight:900">${escapeHtml(t.user?.username || "-")}</div>
+            <div class="small">${escapeHtml(t.userId || "")}</div>
+          </td>
           <td>${t.plan}</td>
           <td>${t.method}</td>
-          <td><button class="primary" onclick="markPaid('${t._id}')">Mark PAID</button></td>
+          <td>Rp ${(t.amountIDR || 0).toLocaleString("id-ID")}</td>
+          <td>
+            ${
+              (t.proofDataUrl || t.proofUrl)
+                ? `<img class="thumb" src="${escapeHtml(t.proofDataUrl || t.proofUrl)}" alt="bukti">`
+                : `<span class="small">-</span>`
+            }
+            ${(t.proofDataUrl || t.proofUrl) ? `<div style="margin-top:6px"><a class="link" href="#" onclick="openProof('${t._id}');return false;">Lihat</a></div>` : ``}
+          </td>
+          <td><button class="btn primary" onclick="markPaid('${t._id}')">Mark PAID</button></td>
         </tr>
-      `).join("")}
+      `
+        )
+        .join("")}
     </table>
   `;
 }
 
-async function markPaid(txId) {
-  await postJSON("/api/admin/transaction/mark-paid", { txId });
-  await loadTx();
-  alert("PAID + premium granted.");
-}
-
-async function grant() {
-  msg3.textContent = "";
-  try {
-    await postJSON("/api/admin/user/grant-premium", { username: uname.value, days: Number(days.value) });
-    msg3.textContent = "Premium diberikan.";
-  } catch (e) {
-    msg3.textContent = e.error || "Gagal grant.";
+async function loadUsers() {
+  const data = await getJSON("/api/admin/users?limit=200");
+  if (!data.items.length) {
+    userTable.innerHTML = `<div class="small">Belum ada user.</div>`;
+    return;
   }
+  userTable.innerHTML = `
+    <table>
+      <tr>
+        <th>Username</th>
+        <th>Status</th>
+        <th>Premium Until</th>
+        <th>Unlocked</th>
+        <th>Created</th>
+      </tr>
+      ${data.items
+        .map((u) => {
+          const st = u.premiumActive ? `<span class="tag">Premium</span>` : `<span class="tag">Free</span>`;
+          return `
+            <tr>
+              <td>
+                <div style="display:flex;gap:10px;align-items:center">
+                  ${
+                    u.avatarUrl
+                      ? `<img class="thumb" src="${escapeHtml(u.avatarUrl)}" alt="av">`
+                      : `<div class="thumb" style="display:grid;place-items:center;color:rgba(255,255,255,.55)">-</div>`
+                  }
+                  <div>
+                    <div style="font-weight:900">${escapeHtml(u.username)}</div>
+                    <div class="small">${escapeHtml(u._id || "")}</div>
+                  </div>
+                </div>
+              </td>
+              <td>${st}</td>
+              <td class="small">${u.premiumUntil ? new Date(u.premiumUntil).toLocaleString() : "-"}</td>
+              <td class="small">${(u.unlockedCount || 0)}/${u.freeEpisodesLimit || 10}</td>
+              <td class="small">${u.createdAt ? new Date(u.createdAt).toLocaleString() : "-"}</td>
+            </tr>
+          `;
+        })
+        .join("")}
+    </table>
+  `;
 }
 
-(async function init() {
-  await guardAdmin();
-  await loadContents();
-  await loadTx();
-})();
+loadMovies();
+loadTx();
+loadUsers();
