@@ -40,8 +40,8 @@ const PAYMENT_ASSETS = {
 router.get("/plans", requireLogin, async (_req, res) => {
   res.json({
     plans: [
-      { code: "premium_30d", label: "Premium 30 Hari", price: PRICES.premium_30d },
-      { code: "premium_90d", label: "Premium 90 Hari", price: PRICES.premium_90d }
+      { code: "premium_3b", label: "Premium 3 bulan", price: PRICES.premium_30d },
+      { code: "premium_12b", label: "Premium 1 tahun", price: PRICES.premium_90d }
     ],
     methods: ["qris", "dana", "seabank"]
   });
