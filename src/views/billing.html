@@ -1,146 +1,23 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Premium | Stream App</title>
-  <style>
-    :root{
-      --bg:#0b1020; --card:#111a33; --muted:#91a0c7; --text:#eaf0ff;
-      --accent:#6ee7ff; --accent2:#a78bfa; --border:rgba(255,255,255,.10);
-      --danger:#ff6b6b; --shadow: 0 20px 60px rgba(0,0,0,.45);
-    }
-    *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
-    body{margin:0; min-height:100vh; color:var(--text); background:linear-gradient(180deg,#070a14,var(--bg));}
-    header{
-      position:sticky; top:0; z-index:5;
-      border-bottom:1px solid var(--border);
-      background:rgba(7,10,20,.72); backdrop-filter: blur(14px);
-    }
-    .wrap{width:min(1100px,100%); margin:0 auto; padding:16px 18px;}
-    .topRow{display:flex; gap:12px; align-items:center; justify-content:space-between; flex-wrap:wrap;}
-    .brand{display:flex; align-items:center; gap:10px;}
-    .logo{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--accent),var(--accent2));}
-    .pill{
-      border:1px solid var(--border); border-radius:999px;
-      background:rgba(255,255,255,.04); color:var(--text);
-      padding:8px 10px; font-size:12px; cursor:pointer; user-select:none;
-    }
-    .pill a{color:inherit;text-decoration:none}
-    .grid{display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-top:14px;}
-    .card{
-      border:1px solid var(--border); border-radius:18px;
-      background:linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.62));
-      box-shadow:var(--shadow);
-      padding:14px;
-    }
-    h1{margin:0;font-size:18px;}
-    .muted{color:var(--muted);font-size:12px;line-height:1.5}
-    select,button,input{
-      width:100%; padding:11px 12px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(10,14,28,.55); color:var(--text);
-      outline:none;
-    }
-    button{
-      border:0; cursor:pointer; font-weight:900;
-      background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#07101a;
-    }
-    button:disabled{opacity:.6; cursor:not-allowed;}
-    .row{display:grid; grid-template-columns: 1fr 1fr; gap:10px;}
-    .box{
-      border:1px solid rgba(255,255,255,.12);
-      background:rgba(255,255,255,.03);
-      border-radius:16px;
-      padding:12px;
-    }
-    .txItem{
-      border:1px solid rgba(255,255,255,.10);
-      background:rgba(255,255,255,.02);
-      border-radius:14px;
-      padding:10px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:10px;
-    }
-    .tag{font-size:11px;padding:6px 8px;border-radius:999px;border:1px solid rgba(255,255,255,.14); color:var(--muted); height:fit-content;}
-    .payImg{
-      width:240px; max-width:100%;
-      border-radius:16px;
-      border:1px solid rgba(255,255,255,.12);
-      display:none;
-      margin-top:10px;
-    }
-    .notice{font-size:12px;color:var(--muted);line-height:1.5}
-    @media(max-width:860px){ .grid{grid-template-columns:1fr;} .row{grid-template-columns:1fr;} }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Billing</title>
+<style>
+body{margin:0;font-family:system-ui;background:#0b1020;color:#eaf0ff}
+.wrap{max-width:900px;margin:0 auto;padding:14px}
+.card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:14px;margin-bottom:12px}
+button{padding:12px;border-radius:14px;border:none;background:linear-gradient(135deg,#6ee7ff,#a78bfa);font-weight:900;cursor:pointer}
+</style>
 </head>
 <body>
-<header>
-  <div class="wrap">
-    <div class="topRow">
-      <div class="brand">
-        <div class="logo"></div>
-        <div>
-          <div style="font-weight:900;">Premium</div>
-          <div id="me" class="muted">Loading...</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap;">
-        <span class="pill"><a href="/app">Katalog</a></span>
-        <span class="pill"><a href="/admin" id="adminLink" style="display:none;">Admin</a></span>
-        <span class="pill" id="btnLogout">Logout</span>
-      </div>
-    </div>
+<div class="wrap">
+  <div class="card">
+    <h2>Billing</h2>
+    <div>Untuk join langganan, silakan gunakan menu di <b>Profile</b>.</div>
+    <div style="margin-top:10px"><button onclick="location.href='/profile'">Buka Profile</button></div>
   </div>
-</header>
-
-<main class="wrap">
-  <div class="grid">
-    <section class="card">
-      <h1>Upgrade Premium</h1>
-      <p class="muted">
-        Ini template pembayaran <b>manual-verifikasi</b>: user membuat transaksi PENDING,
-        admin memverifikasi menjadi PAID, lalu premium aktif.
-      </p>
-
-      <div class="row" style="margin-top:10px;">
-        <div>
-          <div class="muted" style="margin:6px 0;">Pilih Paket</div>
-          <select id="plan"></select>
-        </div>
-        <div>
-          <div class="muted" style="margin:6px 0;">Metode</div>
-          <select id="method"></select>
-        </div>
-      </div>
-
-      <button id="btnCheckout" style="margin-top:10px;">Buat Checkout</button>
-
-      <div class="box" style="margin-top:12px;">
-        <div style="font-weight:900;">Instruksi Pembayaran</div>
-        <div id="payInfo" class="notice" style="margin-top:8px;">Buat checkout untuk melihat instruksi.</div>
-        <img id="payImg" class="payImg" alt="payment" />
-      </div>
-
-      <div class="box" style="margin-top:12px;">
-        <div style="font-weight:900;">Catatan</div>
-        <div class="notice" style="margin-top:8px;">
-          Untuk produksi, Anda perlu integrasi payment gateway resmi (QRIS/DANA/VA) dan verifikasi otomatis.
-          Di template ini dibuat sengaja sederhana agar sesuai permintaan (tanpa JWT, tanpa Firebase).
-        </div>
-      </div>
-    </section>
-
-    <section class="card">
-      <h1>Riwayat Transaksi</h1>
-      <div class="muted">Status transaksi Anda (PENDING/PAID/REJECTED).</div>
-      <div id="txList"></div>
-    </section>
-  </div>
-</main>
-
-<script src="/public/js/billing.js"></script>
+</div>
 </body>
 </html>

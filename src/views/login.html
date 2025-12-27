@@ -1,121 +1,29 @@
 <!doctype html>
 <html lang="id">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Login | Stream App</title>
-  <style>
-    :root{
-      --bg:#0b1020; --card:#111a33; --muted:#91a0c7; --text:#eaf0ff;
-      --accent:#6ee7ff; --accent2:#a78bfa; --danger:#ff6b6b;
-      --border:rgba(255,255,255,.10);
-      --shadow: 0 20px 60px rgba(0,0,0,.45);
-    }
-    *{box-sizing:border-box;font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial;}
-    body{
-      margin:0; min-height:100vh; color:var(--text);
-      background:
-        radial-gradient(1200px 600px at 20% 10%, rgba(167,139,250,.22), transparent 55%),
-        radial-gradient(900px 500px at 90% 30%, rgba(110,231,255,.18), transparent 55%),
-        linear-gradient(180deg, #070a14, var(--bg));
-      display:flex; align-items:center; justify-content:center;
-      padding:24px;
-    }
-    .shell{width:min(980px,100%); display:grid; grid-template-columns: 1.15fr .85fr; gap:18px;}
-    .hero{
-      border:1px solid var(--border); border-radius:22px; padding:26px;
-      background:linear-gradient(180deg, rgba(17,26,51,.85), rgba(17,26,51,.55));
-      box-shadow:var(--shadow);
-      position:relative; overflow:hidden;
-    }
-    .hero:before{
-      content:""; position:absolute; inset:-80px -120px auto auto; width:340px; height:340px;
-      background:radial-gradient(circle at 30% 30%, rgba(110,231,255,.28), transparent 60%);
-      filter: blur(2px);
-    }
-    .brand{display:flex; align-items:center; gap:12px;}
-    .logo{
-      width:44px; height:44px; border-radius:14px;
-      background:linear-gradient(135deg, rgba(110,231,255,.95), rgba(167,139,250,.95));
-      box-shadow:0 16px 40px rgba(110,231,255,.14);
-    }
-    h1{margin:16px 0 6px; font-size:28px; letter-spacing:.2px;}
-    p{margin:0; color:var(--muted); line-height:1.55;}
-    .badgeRow{margin-top:18px; display:flex; flex-wrap:wrap; gap:10px;}
-    .badge{
-      border:1px solid var(--border); color:var(--text); font-size:12px;
-      padding:8px 10px; border-radius:999px;
-      background:rgba(255,255,255,.04);
-    }
-    .card{
-      border:1px solid var(--border); border-radius:22px; padding:22px;
-      background:linear-gradient(180deg, rgba(17,26,51,.92), rgba(17,26,51,.62));
-      box-shadow:var(--shadow);
-    }
-    .title{font-size:16px; margin:0 0 10px;}
-    label{display:block; font-size:12px; color:var(--muted); margin:14px 0 6px;}
-    input{
-      width:100%; padding:12px 12px; border-radius:14px;
-      border:1px solid rgba(255,255,255,.14);
-      background:rgba(10,14,28,.55); color:var(--text);
-      outline:none;
-    }
-    input:focus{border-color: rgba(110,231,255,.55); box-shadow:0 0 0 4px rgba(110,231,255,.12);}
-    .row{display:flex; gap:10px; align-items:center; justify-content:space-between; margin-top:14px;}
-    button{
-      width:100%; margin-top:14px; padding:12px 14px; border-radius:14px;
-      border:0; cursor:pointer; color:#07101a; font-weight:700;
-      background:linear-gradient(135deg, var(--accent), var(--accent2));
-    }
-    button:disabled{opacity:.6; cursor:not-allowed;}
-    .small{font-size:12px; color:var(--muted); margin-top:10px;}
-    .small a{color:var(--accent); text-decoration:none;}
-    .err{margin-top:12px; font-size:12px; color:var(--danger); display:none;}
-    @media (max-width: 860px){
-      .shell{grid-template-columns: 1fr; }
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Login</title>
+<style>
+body{margin:0;font-family:system-ui;background:#0b1020;color:#eaf0ff;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:18px}
+.card{width:min(420px,100%);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.12);border-radius:18px;padding:18px}
+input,button{width:100%;padding:12px;border-radius:14px;border:none}
+input{margin-top:10px;background:rgba(255,255,255,.06);color:#eaf0ff}
+button{margin-top:12px;background:linear-gradient(135deg,#6ee7ff,#a78bfa);font-weight:900;cursor:pointer}
+a{color:#6ee7ff;text-decoration:none}
+.small{opacity:.75;font-size:13px;margin-top:10px}
+</style>
 </head>
 <body>
-  <div class="shell">
-    <section class="hero">
-      <div class="brand">
-        <div class="logo" aria-hidden="true"></div>
-        <div>
-          <div style="font-weight:800; letter-spacing:.4px;">STREAM APP</div>
-          <div style="font-size:12px;color:var(--muted);">Legal Video Library Template</div>
-        </div>
-      </div>
-      <h1>Login untuk mulai menonton</h1>
-      <p>
-        Akun gratis mendapatkan akses <b>10 episode pertama</b>. Episode selanjutnya dapat dibuka
-        melalui <b>Watch Ad</b> (simulasi) atau <b>Premium</b>.
-      </p>
-      <div class="badgeRow">
-        <span class="badge">MongoDB Only</span>
-        <span class="badge">Session Cookie (No JWT)</span>
-        <span class="badge">Search & Genre Filter</span>
-        <span class="badge">Admin Panel</span>
-        <span class="badge">Mock QRIS/DANA/SeaBank</span>
-      </div>
-    </section>
-
-    <section class="card">
-      <h2 class="title">Masuk</h2>
-      <form id="loginForm">
-        <label>Username</label>
-        <input id="username" autocomplete="username" placeholder="contoh: fandy" />
-        <label>Password</label>
-        <input id="password" type="password" autocomplete="current-password" placeholder="minimal 6 karakter" />
-        <div class="err" id="errBox"></div>
-        <button id="btnLogin" type="submit">Login</button>
-        <div class="small">
-          Belum punya akun? <a href="/register">Registrasi</a>
-        </div>
-      </form>
-    </section>
-  </div>
-
-  <script src="/public/js/login.js"></script>
+<div class="card">
+  <h2>Login</h2>
+  <div class="small">Masuk pakai username & password.</div>
+  <input id="u" placeholder="Username">
+  <input id="p" placeholder="Password" type="password">
+  <button onclick="login()">Masuk</button>
+  <div class="small" id="msg"></div>
+  <div class="small">Belum punya akun? <a href="/register">Daftar</a></div>
+</div>
+<script src="/public/js/login.js"></script>
 </body>
 </html>
