@@ -18,22 +18,23 @@ router.post(
     const username = normalizeUsername(req.body.username);
     const password = String(req.body.password || "");
 
-    if (username.length < 3) return res.status(400).json({ error: "USERNAME_TOO_SHORT" });
-    if (password.length < 6) return res.status(400).json({ error: "PASSWORD_TOO_SHORT" });
+    if (!username || username.length < 3 || password.length < 4) {
+      return res.status(400).json({ error: "BAD_INPUT" });
+    }
+
+    const adminU = normalizeUsername(process.env.ADMIN_USERNAME || "");
+    if (adminU && username === adminU) {
+      return res.status(403).json({ error: "RESERVED_USERNAME" });
+    }
 
     const exists = await User.findOne({ username });
     if (exists) return res.status(409).json({ error: "USERNAME_TAKEN" });
 
-    const passwordHash = await bcrypt.hash(password, 12);
+    const passwordHash = await bcrypt.hash(password, 10);
+    const user = await User.create({ username, passwordHash });
 
-    // Admin bootstrap: if match .env, create as admin
-    const isAdmin =
-      username === String(process.env.ADMIN_USERNAME || "").trim().toLowerCase() &&
-      password === String(process.env.ADMIN_PASSWORD || "");
-
-    const user = await User.create({ username, passwordHash, isAdmin });
-    req.session.userId = user._id.toString();
-    return res.json({ ok: true, user: { username: user.username, isAdmin: user.isAdmin } });
+    req.session.userId = user._id;
+    return res.json({ ok: true });
   }
 );
 
@@ -43,6 +44,24 @@ router.post(
   async (req, res) => {
     const username = normalizeUsername(req.body.username);
     const password = String(req.body.password || "");
+    if (!username || !password) return res.status(400).json({ error: "BAD_INPUT" });
+
+    const adminU = normalizeUsername(process.env.ADMIN_USERNAME || "");
+    const adminP = String(process.env.ADMIN_PASSWORD || "");
+
+    // Admin login via env (auto-create admin user if not exist)
+    if (adminU && adminP && username === adminU && password === adminP) {
+      let admin = await User.findOne({ username: adminU });
+      if (!admin) {
+        const passwordHash = await bcrypt.hash(adminP, 10);
+        admin = await User.create({ username: adminU, passwordHash, isAdmin: true });
+      } else if (!admin.isAdmin) {
+        admin.isAdmin = true;
+        await admin.save();
+      }
+      req.session.userId = admin._id;
+      return res.json({ ok: true, admin: true });
+    }
 
     const user = await User.findOne({ username });
     if (!user) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
@@ -50,8 +69,8 @@ router.post(
     const ok = await bcrypt.compare(password, user.passwordHash);
     if (!ok) return res.status(401).json({ error: "INVALID_CREDENTIALS" });
 
-    req.session.userId = user._id.toString();
-    return res.json({ ok: true, user: { username: user.username, isAdmin: user.isAdmin } });
+    req.session.userId = user._id;
+    return res.json({ ok: true });
   }
 );
 
@@ -65,8 +84,10 @@ router.get("/me", async (req, res) => {
     user: {
       username: req.user.username,
       isAdmin: req.user.isAdmin,
+      avatarUrl: req.user.avatarUrl || "",
       premiumUntil: req.user.premiumUntil,
-      premiumActive: req.user.isPremiumActive()
+      premiumActive: req.user.isPremiumActive(),
+      freeEpisodesLimit: req.user.freeEpisodesLimit
     }
   });
 });

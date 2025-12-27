@@ -6,28 +6,44 @@ const { attachUser, requireLogin } = require("../middleware/auth");
 const router = express.Router();
 router.use(attachUser);
 
-// Price table (editable)
 const PRICES = {
   premium_30d: 25000,
   premium_90d: 60000
 };
 
+const PAYMENT_ASSETS = {
+  qris: {
+    title: "QRIS",
+    imageUrl: "https://img1.pixhost.to/images/11120/673863920_deomedia.jpg&text=QRIS+IMAGE+PLACEHOLDER",
+    text: "Scan QRIS di atas (placeholder)."
+  },
+  dana: {
+    title: "DANA",
+    imageUrl: "https://img1.pixhost.to/images/11182/674949547_deomedia.jpg&text=DANA+QR+PLACEHOLDER",
+    text: "DANA: 085179732934 (placeholder)."
+  },
+  seabank: {
+    title: "SeaBank",
+    imageUrl: "https://dummyimage.com/800x800/111a33/ffffff.png&text=SEABANK+PLACEHOLDER",
+    text: "SeaBank: 901341746638 (placeholder)."
+  }
+};
+
 router.get("/plans", (_req, res) => {
   res.json({
     plans: [
-      { code: "premium_30d", label: "Premium 30 Hari", amountIDR: PRICES.premium_30d },
-      { code: "premium_90d", label: "Premium 90 Hari", amountIDR: PRICES.premium_90d }
-    ],
-    methods: ["qris", "dana", "seabank"]
+      { id: "premium_30d", label: "Premium 30 hari", price: PRICES.premium_30d },
+      { id: "premium_90d", label: "Premium 90 hari", price: PRICES.premium_90d }
+    ]
   });
 });
 
-// Create checkout (mock)
-router.post("/checkout", requireLogin, async (req, res) => {
+router.post("/create", requireLogin, async (req, res) => {
   const plan = String(req.body.plan || "");
   const method = String(req.body.method || "");
-  if (!PRICES[plan]) return res.status(400).json({ error: "INVALID_PLAN" });
-  if (!["qris", "dana", "seabank"].includes(method)) return res.status(400).json({ error: "INVALID_METHOD" });
+
+  if (!PRICES[plan]) return res.status(400).json({ error: "BAD_PLAN" });
+  if (!PAYMENT_ASSETS[method]) return res.status(400).json({ error: "BAD_METHOD" });
 
   const tx = await Transaction.create({
     userId: req.user._id,
@@ -37,33 +53,12 @@ router.post("/checkout", requireLogin, async (req, res) => {
     status: "PENDING"
   });
 
-  // Payment UI assets (placeholder links) — ganti dengan aset legal Anda sendiri
-  const paymentAssets = {
-    qris: {
-      title: "QRIS",
-      instructions: "Scan QRIS (contoh placeholder). Setelah bayar, tunggu admin verifikasi.",
-      imageUrl: "https://img1.pixhost.to/images/11120/673863920_deomedia.jpg"
-    },
-    dana: {
-      title: "DANA",
-      instructions: "Transfer ke nomor DANA (placeholder). Setelah bayar, tunggu admin verifikasi.",
-      text: "DANA: 085179732934 (placeholder)"
-    },
-    seabank: {
-      title: "SeaBank",
-      instructions: "Transfer SeaBank (placeholder). Setelah bayar, tunggu admin verifikasi.",
-      text: "SeaBank VA/No Rek: 901341746638 (placeholder)"
-    }
-  };
-
-  res.json({ ok: true, txId: tx._id, payment: paymentAssets[method] });
+  res.json({ ok: true, txId: tx._id, payment: PAYMENT_ASSETS[method] });
 });
 
 router.get("/my-transactions", requireLogin, async (req, res) => {
   const items = await Transaction.find({ userId: req.user._id }).sort({ createdAt: -1 }).lean();
   res.json({ items });
 });
-
-// When admin marks PAID, premium will be granted via admin route.
 
 module.exports = router;
