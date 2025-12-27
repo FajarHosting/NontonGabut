@@ -2,11 +2,15 @@ const User = require("../models/User");
 
 async function attachUser(req, _res, next) {
   try {
-    if (!req.session.userId) return next();
+    if (!req.session.userId) {
+      req.user = null;
+      return next();
+    }
     const user = await User.findById(req.session.userId);
     req.user = user || null;
     return next();
-  } catch (e) {
+  } catch {
+    req.user = null;
     return next();
   }
 }

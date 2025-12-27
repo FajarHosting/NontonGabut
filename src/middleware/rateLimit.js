@@ -14,9 +14,7 @@ function rateLimit({ keyPrefix, limit, windowMs }) {
     entry.count += 1;
     bucket.set(key, entry);
 
-    if (entry.count > limit) {
-      return res.status(429).json({ error: "RATE_LIMITED" });
-    }
+    if (entry.count > limit) return res.status(429).json({ error: "RATE_LIMITED" });
     return next();
   };
 }
