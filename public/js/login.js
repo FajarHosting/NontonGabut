@@ -1,38 +1,20 @@
-async function api(path, body) {
-  const r = await fetch(path, {
+async function api(url, data) {
+  const r = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body || {})
+    body: JSON.stringify(data)
   });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw data;
-  return data;
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
 }
 
-function showErr(msg) {
-  const box = document.getElementById("errBox");
-  box.style.display = "block";
-  box.textContent = msg;
-}
-
-document.getElementById("loginForm").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById("btnLogin");
-  btn.disabled = true;
-
-  const username = document.getElementById("username").value.trim();
-  const password = document.getElementById("password").value;
-
+async function login() {
+  msg.textContent = "";
   try {
-    await api("/api/auth/login", { username, password });
-    window.location.href = "/app";
-  } catch (err) {
-    const map = {
-      INVALID_CREDENTIALS: "Username atau password salah.",
-      RATE_LIMITED: "Terlalu banyak percobaan. Coba lagi beberapa saat."
-    };
-    showErr(map[err.error] || "Login gagal. Coba ulang.");
-  } finally {
-    btn.disabled = false;
+    await api("/api/auth/login", { username: u.value, password: p.value });
+    location.href = "/app";
+  } catch (e) {
+    msg.textContent = e.error || "Login gagal";
   }
-});
+}

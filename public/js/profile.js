@@ -1,60 +1,85 @@
-import { api } from "./api.js";
-import { requireLogin } from "./guard.js";
+async function getJSON(u) {
+  const r = await fetch(u);
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
+}
+async function postJSON(u, body) {
+  const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
+}
 
-const $ = (id)=>document.getElementById(id);
-const msg = (t)=>$("msg").textContent=t;
-const msg2 = (t)=>$("msg2").textContent=t;
+async function logout() {
+  await postJSON("/api/auth/logout", {});
+  location.href = "/login";
+}
 
-$("btnLogout").onclick = async ()=>{
-  await api("/api/auth/logout", { method:"POST" });
-  location.href="/login.html";
-};
+async function load() {
+  const data = await getJSON("/api/profile");
+  info.textContent = data.user.username;
+  meta.innerHTML = `
+    Status: <b>${data.user.premiumActive ? "Premium" : "Free"}</b><br>
+    Premium Until: ${data.user.premiumUntil ? new Date(data.user.premiumUntil).toLocaleString() : "-"}<br>
+    Unlocked: ${data.user.unlockedCount}/${data.user.freeEpisodesLimit}
+  `;
 
-(async ()=>{
-  const u = await requireLogin();
-  if (!u) return;
-
-  $("nm").textContent = u.displayName || "User";
-  $("em").textContent = u.email;
-
-  $("displayName").value = u.displayName || "";
-  $("avatarUrl").value = u.avatarUrl || "";
-
-  if (u.avatarUrl) $("av").innerHTML = `<img src="${u.avatarUrl}" alt="avatar">`;
-  else $("av").textContent = (u.displayName || u.email || "U")[0].toUpperCase();
-
-  $("status").className = "badge " + (u.isSubscribed ? "ok":"no");
-  $("status").textContent = u.isSubscribed ? "Subscribed" : "Free";
-
-  if (u.role === "admin") {
-    $("adminLink").style.display = "";
-    $("btnGotoAdmin").style.display = "";
+  if (data.user.avatarUrl) {
+    av.src = data.user.avatarUrl;
+    av.style.display = "block";
+    avfb.style.display = "none";
   }
 
-  $("btnSave").onclick = async ()=>{
-    msg("Menyimpan...");
-    try {
-      await api("/api/profile", { method:"PATCH", body:{
-        displayName: $("displayName").value,
-        avatarUrl: $("avatarUrl").value
-      }});
-      msg("Profil tersimpan. Refresh halaman untuk lihat update.");
-    } catch(e){
-      msg("Gagal: " + e.message);
-    }
-  };
+  // tx table
+  if (!data.transactions.length) {
+    txBox.innerHTML = `<div class="small">Belum ada transaksi.</div>`;
+  } else {
+    txBox.innerHTML = `
+      <table>
+        <tr><th>Tanggal</th><th>Plan</th><th>Metode</th><th>Status</th></tr>
+        ${data.transactions.map(t => `
+          <tr>
+            <td>${new Date(t.createdAt).toLocaleString()}</td>
+            <td>${t.plan}</td>
+            <td>${t.method}</td>
+            <td>${t.status}</td>
+          </tr>
+        `).join("")}
+      </table>
+    `;
+  }
+}
 
-  $("btnReq").onclick = async ()=>{
-    msg2("Mengirim request...");
-    try {
-      await api("/api/subscribe/request", { method:"POST", body:{
-        plan: $("plan").value,
-        method: $("method").value,
-        proofUrl: $("proofUrl").value
-      }});
-      msg2("Request terkirim. Tunggu admin approve.");
-    } catch(e){
-      msg2("Gagal: " + e.message);
-    }
-  };
-})();
+async function saveAvatar() {
+  msg.textContent = "";
+  try {
+    await postJSON("/api/profile/avatar", { avatarUrl: url.value });
+    msg.textContent = "Logo tersimpan.";
+    await load();
+  } catch (e) {
+    msg.textContent = e.error || "URL tidak valid.";
+  }
+}
+
+async function createTx() {
+  payBox.innerHTML = "";
+  try {
+    const out = await postJSON("/api/billing/create", { plan: plan.value, method: method.value });
+    payBox.innerHTML = `
+      <div class="card" style="border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px">
+        <div style="font-weight:900">${out.payment.title}</div>
+        <div class="small">TX ID: ${out.txId}</div>
+        <div style="margin-top:10px">
+          <img src="${out.payment.imageUrl}" style="width:220px;max-width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.12)">
+        </div>
+        <div class="small" style="margin-top:10px">${out.payment.text}</div>
+      </div>
+    `;
+    await load();
+  } catch (e) {
+    payBox.innerHTML = `<div class="small">Gagal membuat transaksi: ${e.error || "error"}</div>`;
+  }
+}
+
+load();

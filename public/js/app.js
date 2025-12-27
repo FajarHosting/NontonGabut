@@ -1,92 +1,123 @@
-async function getJSON(url) {
-  const r = await fetch(url);
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw data;
-  return data;
+async function getJSON(u) {
+  const r = await fetch(u);
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
 }
-async function postJSON(url, body) {
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body || {})
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw data;
-  return data;
+async function postJSON(u, body) {
+  const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
 }
 
-function esc(s){ return String(s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
-
-async function loadMe(){
-  const { user } = await getJSON("/api/auth/me");
-  if (!user) {
-    window.location.href = "/login";
-    return;
-  }
-  const me = document.getElementById("me");
-  me.textContent = `${user.username} • ${user.premiumActive ? "Premium Active" : "Free (10 eps) + Ad Unlock"}`;
-  if (user.isAdmin) document.getElementById("adminLink").style.display = "inline";
+async function logout() {
+  await postJSON("/api/auth/logout", {});
+  location.href = "/login";
 }
 
-function cardHTML(it){
-  const cover = it.coverUrl ? `<img src="${esc(it.coverUrl)}" alt="cover" style="width:100%;height:100%;object-fit:cover;display:block;">`
-                            : `<div style="font-weight:900;">${esc(it.title)}</div>`;
-  const chips = (it.genres||[]).slice(0,4).map(g=>`<span class="chip">${esc(g)}</span>`).join("");
+function cardHTML(c) {
+  const safeCover = c.coverUrl || "https://dummyimage.com/600x800/111a33/ffffff.png&text=NO+COVER";
   return `
-    <div class="card">
-      <div class="cover">${cover}</div>
-      <div class="meta">
-        <div class="title">${esc(it.title)}</div>
-        <div class="sub">${esc(it.type)} • ${it.episodeCount} episode</div>
-        <div class="chips">${chips}</div>
-        <div class="sub">${esc((it.synopsis||"").slice(0,120))}${(it.synopsis||"").length>120?"...":""}</div>
-      </div>
-      <div class="actions">
-        <button onclick="openDetail('${it._id}')">Lihat Episode</button>
-        <button class="ghost" onclick="openWatch('${it._id}', 1)">Play Eps 1</button>
-      </div>
+    <div class="miniCard" onclick="location.href='/watch?id=${c._id}&ep=1'">
+      <img src="${safeCover}">
+      <div class="t">${c.title}</div>
     </div>
   `;
 }
 
-window.openWatch = (contentId, episode) => {
-  window.location.href = `/watch?contentId=${encodeURIComponent(contentId)}&episode=${encodeURIComponent(episode)}`;
-};
-
-window.openDetail = async (id) => {
-  const { item } = await getJSON(`/api/content/${id}`);
-  const eps = (item.episodes||[]).map(e => `Eps ${e.episodeNumber}`).slice(0,10).join(", ");
-  alert(`${item.title}\nTotal episode: ${(item.episodes||[]).length}\nContoh episode: ${eps}\n\nKlik OK untuk buka Watch Eps 1.`);
-  openWatch(id, 1);
-};
-
-async function loadList(){
-  const q = document.getElementById("q").value.trim();
-  const type = document.getElementById("type").value;
-  const genre = document.getElementById("genre").value.trim();
-
-  const qs = new URLSearchParams();
-  if (q) qs.set("q", q);
-  if (type) qs.set("type", type);
-  if (genre) qs.set("genre", genre);
-
-  const { items } = await getJSON(`/api/content?${qs.toString()}`);
-  const grid = document.getElementById("grid");
-  grid.innerHTML = items.map(cardHTML).join("");
+function setActive(tab) {
+  ["Home","Search","History","Account"].forEach((t)=>{
+    document.getElementById("sec"+t).classList.remove("active");
+    document.getElementById("nav"+t).classList.remove("active");
+  });
+  document.getElementById("sec"+tab).classList.add("active");
+  document.getElementById("nav"+tab).classList.add("active");
 }
 
-document.getElementById("btnLogout").addEventListener("click", async ()=>{
-  await postJSON("/api/auth/logout");
-  window.location.href = "/login";
-});
+async function go(tab) {
+  setActive(tab);
+  if (tab === "History") await loadHistory();
+  if (tab === "Account") await loadAccount();
+}
 
-["q","type","genre"].forEach(id=>{
-  const el = document.getElementById(id);
-  el.addEventListener("input", () => { clearTimeout(window.__t); window.__t=setTimeout(loadList, 250); });
-  el.addEventListener("change", loadList);
-});
+async function loadMe() {
+  const me = await getJSON("/api/auth/me");
+  if (!me.user) {
+    location.href = "/login";
+    return null;
+  }
+  userLine.textContent = `${me.user.username} • ${me.user.premiumActive ? "Premium" : "Free (10 eps) + Ad Unlock"}`;
 
-(async ()=>{
+  if (me.user.avatarUrl) {
+    avatarImg.src = me.user.avatarUrl;
+    avatarImg.style.display = "block";
+    avatarFallback.style.display = "none";
+    avatarImg.onerror = () => {
+      avatarImg.style.display = "none";
+      avatarFallback.style.display = "flex";
+    };
+  }
+  return me.user;
+}
+
+async function loadHome() {
+  const data = await getJSON("/api/content?limit=80");
+  slider.innerHTML = data.items.slice(0, 12).map(cardHTML).join("");
+  gridAll.innerHTML = data.items.map(cardHTML).join("");
+}
+
+async function doSearch() {
+  const params = new URLSearchParams();
+  if (q.value.trim()) params.set("q", q.value.trim());
+  if (type.value) params.set("type", type.value);
+  if (genre.value.trim()) params.set("genre", genre.value.trim().toLowerCase());
+  params.set("limit", "80");
+
+  const data = await getJSON("/api/content?" + params.toString());
+  gridSearch.innerHTML = data.items.map(cardHTML).join("") || `<div class="small">Tidak ada hasil.</div>`;
+}
+
+async function loadHistory() {
+  try {
+    const data = await getJSON("/api/watch/history");
+    if (!data.items.length) {
+      hist.innerHTML = `<div class="small">Belum ada history nonton.</div>`;
+      return;
+    }
+    hist.innerHTML = data.items.map(h => `
+      <div class="histItem" onclick="location.href='/watch?id=${h.contentId}&ep=${h.episode || 1}'">
+        <img src="${h.coverUrl || "https://dummyimage.com/600x800/111a33/ffffff.png&text=NO+COVER"}">
+        <div>
+          <div style="font-weight:900">${h.title || "Untitled"}</div>
+          <div class="small">Episode ${h.episode || 1} • ${new Date(h.watchedAt).toLocaleString()}</div>
+        </div>
+      </div>
+    `).join("");
+  } catch {
+    hist.innerHTML = `<div class="small">Login dulu untuk melihat history.</div>`;
+  }
+}
+
+async function loadAccount() {
+  try {
+    const me = await getJSON("/api/auth/me");
+    if (!me.user) {
+      accInfo.textContent = "Belum login.";
+      return;
+    }
+    accInfo.innerHTML = `
+      <b>${me.user.username}</b><br>
+      Status: ${me.user.premiumActive ? "Premium" : "Free"}<br>
+      Free limit: ${me.user.freeEpisodesLimit} episode
+      ${me.user.isAdmin ? "<br><span class='small'>Admin: aktif (akses /admin)</span>" : ""}
+    `;
+  } catch {
+    accInfo.textContent = "Belum login.";
+  }
+}
+
+(async function init() {
   await loadMe();
-  await loadList();
+  await loadHome();
 })();

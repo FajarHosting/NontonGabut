@@ -1,168 +1,105 @@
-async function getJSON(url) {
-  const r = await fetch(url);
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw data;
-  return data;
-}
-async function postJSON(url, body) {
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body || {})
-  });
-  const data = await r.json().catch(() => ({}));
-  if (!r.ok) throw data;
-  return data;
-}
-function esc(s){ return String(s||"").replace(/[&<>"']/g, m=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[m])); }
-
-const qs = new URLSearchParams(location.search);
-let contentId = qs.get("contentId") || "";
-let episode = Number(qs.get("episode") || 1);
-
-let ME = null;
-let ITEM = null;
-
-function showModal(show){
-  document.getElementById("modalBackdrop").style.display = show ? "flex" : "none";
+function qs(name) {
+  const u = new URL(location.href);
+  return u.searchParams.get(name);
 }
 
-async function loadMe(){
-  const { user } = await getJSON("/api/auth/me");
-  if (!user) { window.location.href = "/login"; return; }
-  ME = user;
-  if (user.isAdmin) document.getElementById("adminLink").style.display = "inline";
+async function getJSON(u) {
+  const r = await fetch(u);
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
+}
+async function postJSON(u, body) {
+  const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  const j = await r.json();
+  if (!r.ok) throw j;
+  return j;
 }
 
-function setHeader(){
-  document.getElementById("hdrTitle").textContent = ITEM ? ITEM.title : "Watch";
-  document.getElementById("hdrSub").textContent =
-    (ME ? ME.username : "") +
-    " • " +
-    (ME && ME.premiumActive ? "Premium Active" : "Free (10 eps) + Ad Unlock");
-}
-
-function setNowPlaying(){
-  document.getElementById("nowPlaying").textContent =
-    `${ITEM.title} • Episode ${episode}`;
-}
-
-function isLikelyEmbedUrl(url){
-  const u = String(url||"");
-  return u.includes("youtube.com/embed") || u.includes("player.vimeo.com") || u.includes("embed");
-}
-
-function setPlayerUrl(videoUrl){
-  const playerArea = document.getElementById("playerArea");
-  const v = document.getElementById("video");
-
-  // Simple heuristic: iframe for embed-like URLs, video tag for direct URLs
-  if (isLikelyEmbedUrl(videoUrl)) {
-    playerArea.innerHTML =
-      `<iframe src="${esc(videoUrl)}" style="height:420px" allow="autoplay; fullscreen" loading="lazy"></iframe>`;
-  } else {
-    // restore video element if replaced
-    if (!document.getElementById("video")) {
-      playerArea.innerHTML = `<video id="video" controls playsinline></video>`;
-    }
-    const vv = document.getElementById("video");
-    vv.src = videoUrl;
-    vv.load();
+function renderPlayer(url) {
+  const isMp4 = /\.mp4(\?|$)/i.test(url);
+  if (isMp4) {
+    return `<video controls playsinline src="${url}"></video>`;
   }
+  return `<iframe src="${url}" allow="autoplay; fullscreen" allowfullscreen></iframe>`;
 }
 
-async function canWatch(){
-  const data = await getJSON(`/api/watch/can-watch?contentId=${encodeURIComponent(contentId)}&episode=${encodeURIComponent(episode)}`);
-  if (data.allowed) {
-    showModal(false);
-    setPlayerUrl(data.videoUrl);
-    document.getElementById("policyInfo").textContent = `Akses: ${data.reason}`;
-  } else {
-    document.getElementById("policyInfo").textContent = "Akses: LOCKED";
-    showModal(true);
+function epBtnHTML(id, ep, active) {
+  return `<button class="epBtn ${active ? "active" : ""}" onclick="location.href='/watch?id=${id}&ep=${ep}'">EP ${ep}</button>`;
+}
+
+async function main() {
+  const id = qs("id");
+  const ep = Number(qs("ep") || 1);
+  if (!id) {
+    title.textContent = "Content tidak ditemukan";
+    return;
   }
-}
 
-function renderEpisodes(){
-  const list = document.getElementById("epsList");
-  const eps = (ITEM.episodes || []).slice().sort((a,b)=>a.episodeNumber-b.episodeNumber);
+  const me = await getJSON("/api/auth/me");
+  if (!me.user) {
+    location.href = "/login";
+    return;
+  }
 
-  list.innerHTML = eps.map(e => {
-    const n = e.episodeNumber;
-    const active = n === episode;
-    const tag = active ? `<span class="tag ok">NOW</span>` : `<span class="tag">OPEN</span>`;
-    return `
-      <div class="epsBtn" onclick="window.goEp(${n})" style="${active ? "border-color: rgba(110,231,255,.45)" : ""}">
-        <div>
-          <div style="font-weight:900;">Eps ${n}</div>
-          <div class="muted">${esc(e.title || "")}</div>
-        </div>
-        ${tag}
-      </div>
+  const detail = await getJSON("/api/content/" + id);
+  const item = detail.item;
+  title.textContent = item.title;
+
+  // episodes bar
+  const epsList = (item.episodes || []).map(e => Number(e.episodeNumber)).sort((a,b)=>a-b);
+  eps.innerHTML = epsList.map(n => epBtnHTML(id, n, n === ep)).join("");
+
+  // find current ep video url
+  const current = (item.episodes || []).find(e => Number(e.episodeNumber) === ep);
+  if (!current) {
+    status.textContent = "Episode tidak ditemukan.";
+    playerBox.innerHTML = "";
+    actions.innerHTML = "";
+    return;
+  }
+
+  // access check
+  try {
+    const can = await getJSON(`/api/watch/can-watch?contentId=${encodeURIComponent(id)}&episode=${ep}`);
+    status.textContent = `Akses: ${can.mode}`;
+    playerBox.innerHTML = renderPlayer(current.videoUrl);
+
+    actions.innerHTML = `
+      <button class="btn btnPrimary" onclick="nextEp()">Episode berikutnya</button>
+      <button class="btn" onclick="location.href='/profile'">Profile</button>
     `;
-  }).join("");
+
+    // log history
+    await postJSON("/api/watch/log", { contentId: id, episode: ep });
+  } catch (e) {
+    status.textContent = "Episode terkunci. Unlock via iklan atau premium.";
+    playerBox.innerHTML = `<div style="padding:16px" class="small">Konten terkunci.</div>`;
+
+    actions.innerHTML = `
+      <button class="btn btnPrimary" onclick="unlockAd(${JSON.stringify(id)}, ${ep})">Tonton Iklan (Unlock)</button>
+      <button class="btn" onclick="location.href='/profile'">Join Premium</button>
+    `;
+  }
 }
 
-window.goEp = (n) => {
-  const nextUrl = `/watch?contentId=${encodeURIComponent(contentId)}&episode=${encodeURIComponent(n)}`;
-  window.location.href = nextUrl;
-};
-
-async function loadItem(){
-  const { item } = await getJSON(`/api/content/${encodeURIComponent(contentId)}`);
-  ITEM = item;
-}
-
-let adTimer = null;
-
-async function runAdUnlock(){
-  const btn = document.getElementById("btnAd");
-  btn.disabled = true;
-
-  const bar = document.getElementById("bar");
-  const txt = document.getElementById("adText");
-
-  let t = 0;
-  const total = 8;
-
-  bar.style.width = "0%";
-  txt.textContent = "Iklan berjalan...";
-
-  if (adTimer) clearInterval(adTimer);
-  adTimer = setInterval(() => {
-    t += 1;
-    bar.style.width = `${Math.round((t/total)*100)}%`;
-    txt.textContent = `Menunggu ${Math.max(0, total - t)} detik...`;
-    if (t >= total) {
-      clearInterval(adTimer);
-      txt.textContent = "Selesai. Unlocking...";
-      (async ()=>{
-        try{
-          await postJSON("/api/watch/unlock-by-ad", { contentId, episode });
-          await canWatch();
-        } finally {
-          btn.disabled = false;
-          txt.textContent = "Selesai.";
-        }
-      })();
+async function unlockAd(contentId, episode) {
+  alert("Simulasi iklan 5 detik…");
+  setTimeout(async () => {
+    try {
+      await postJSON("/api/watch/unlock-ad", { contentId, episode });
+      location.reload();
+    } catch (e) {
+      alert(e.error || "Gagal unlock");
     }
-  }, 1000);
+  }, 5000);
 }
 
-document.getElementById("btnAd").addEventListener("click", runAdUnlock);
-document.getElementById("btnPremium").addEventListener("click", ()=> window.location.href = "/billing");
-document.getElementById("btnClose").addEventListener("click", ()=> showModal(false));
-document.getElementById("btnLogout").addEventListener("click", async ()=>{
-  await postJSON("/api/auth/logout");
-  window.location.href = "/login";
-});
+function nextEp(){
+  const u = new URL(location.href);
+  const ep = Number(u.searchParams.get("ep") || 1);
+  u.searchParams.set("ep", String(ep + 1));
+  location.href = u.toString();
+}
 
-(async ()=>{
-  if (!contentId) { window.location.href = "/app"; return; }
-  await loadMe();
-  await loadItem();
-  setHeader();
-  renderEpisodes();
-  setNowPlaying();
-  await canWatch();
-})();
+main();
