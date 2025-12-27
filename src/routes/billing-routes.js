@@ -6,25 +6,33 @@ const router = express.Router();
 router.use(attachUser);
 
 const PRICES = {
-  premium_30d: 25000,
-  premium_90d: 60000
+  premium_3b: 25000,
+  premium_12b: 60000
 };
 
 const PAYMENT_ASSETS = {
   qris: {
     title: "QRIS",
-    imageUrl: "https://i.imgur.com/5b1HcQh.png",
-    text: "Scan QRIS untuk membayar. Setelah transfer, upload bukti di riwayat transaksi (PENDING)."
+    imageUrl: "https://img1.pixhost.to/images/11120/673863920_deomedia.jpg",
+    text: "Scan QRIS untuk membayar. Setelah transfer, upload bukti di riwayat transaksi (PENDING).",
+    copyFields: []
   },
   dana: {
     title: "DANA",
     imageUrl: "https://i.imgur.com/6c4vJzJ.png",
-    text: "Transfer via DANA. Setelah transfer, upload bukti di riwayat transaksi (PENDING)."
+    text: "Transfer via DANA. Setelah transfer, upload bukti di riwayat transaksi (PENDING).",
+    copyFields: [
+      { label: "Nomor DANA", value: process.env.DANA_NUMBER || "" }
+    ]
   },
   seabank: {
     title: "SeaBank",
     imageUrl: "https://i.imgur.com/0b8d7d4.png",
-    text: "Transfer via SeaBank. Setelah transfer, upload bukti di riwayat transaksi (PENDING)."
+    text: "Transfer via SeaBank. Setelah transfer, upload bukti di riwayat transaksi (PENDING).",
+    copyFields: [
+      { label: "No. Rekening SeaBank", value: process.env.SEABANK_ACCOUNT || "" },
+      { label: "Nama Rekening", value: process.env.SEABANK_ACCOUNT_NAME || "" }
+    ]
   }
 };
 
@@ -47,6 +55,13 @@ router.post("/create", requireLogin, async (req, res) => {
   if (!PRICES[plan]) return res.status(400).json({ error: "BAD_PLAN" });
   if (!PAYMENT_ASSETS[method]) return res.status(400).json({ error: "BAD_METHOD" });
 
+  const payment = PAYMENT_ASSETS[method];
+
+  // Kalau pilih dana/seabank tapi env belum diset, balikin error yang jelas
+  if ((method === "dana" || method === "seabank") && (!payment.copyFields || payment.copyFields.every(f => !String(f.value || "").trim()))) {
+    return res.status(500).json({ error: "PAYMENT_ACCOUNT_NOT_SET" });
+  }
+
   const tx = await Transaction.create({
     userId: req.user._id,
     plan,
@@ -55,7 +70,7 @@ router.post("/create", requireLogin, async (req, res) => {
     status: "PENDING"
   });
 
-  res.json({ ok: true, txId: tx._id, payment: PAYMENT_ASSETS[method] });
+  res.json({ ok: true, txId: tx._id, payment });
 });
 
 // riwayat transaksi user
