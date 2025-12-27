@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const TransactionSchema = new mongoose.Schema(
   {
     userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
-    plan: { type: String, enum: ["premium_30d", "premium_90d"], required: true },
+    plan: { type: String, enum: ["premium_3b", "premium_12b"], required: true },
     amountIDR: { type: Number, required: true },
     method: { type: String, enum: ["qris", "dana", "seabank"], required: true },
     status: { type: String, enum: ["PENDING", "PAID", "REJECTED"], default: "PENDING" },
