@@ -1,106 +1,78 @@
 <!doctype html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Profile</title>
-  <style>
-    :root{--bg:#070a12;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.10);
-      --text:#eaf0ff;--muted:rgba(255,255,255,.72);--accent:#79d2ff;--accent2:#8b5cf6}
-    *{box-sizing:border-box}
-    body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;color:var(--text);
-      background:radial-gradient(1100px 760px at 15% 10%, rgba(121,210,255,.18), transparent 60%),
-                 radial-gradient(900px 600px at 90% 20%, rgba(139,92,246,.16), transparent 60%),
-                 linear-gradient(180deg,#050712,#070a12 40%, #050712);}
-    .wrap{max-width:980px;margin:0 auto;padding:18px}
-    .top{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:12px}
-    .btn{appearance:none;border:1px solid var(--border);background:rgba(255,255,255,.06);color:var(--text);
-      padding:10px 14px;border-radius:14px;font-weight:700;cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0}
-    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:14px}
-    .small{color:var(--muted);font-size:13px}
-    input,select{width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--border);
-      background:rgba(0,0,0,.25);color:var(--text);outline:none}
-    table{width:100%;border-collapse:collapse}
-    td,th{padding:10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px}
-    .pill{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);
-      background:rgba(255,255,255,.05);font-size:12px;color:var(--muted)}
-    .txActions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .thumb{width:46px;height:46px;border-radius:12px;border:1px solid rgba(255,255,255,.12);object-fit:cover;background:rgba(0,0,0,.25)}
-    a.link{color:var(--accent);font-weight:800;text-decoration:none}
-
-    /* modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
-    .modal .box{width:min(820px,100%);background:rgba(10,14,24,.92);border:1px solid var(--border);border-radius:18px;padding:14px}
-    .modal .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .modal img{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#000}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Profile</title>
+<style>
+:root{--bg:#0b1020;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#eaf0ff;--muted:rgba(234,240,255,.72);--a:#6ee7ff;--b:#a78bfa}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--text)}
+.wrap{max-width:980px;margin:0 auto;padding:14px 14px 18px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:14px;flex-wrap:wrap}
+.avatar{width:120px;height:120px;border-radius:22px;overflow:hidden;border:1px solid var(--border);background:rgba(255,255,255,.05)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+input,select,button{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text)}
+button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));color:#071018;font-weight:900;cursor:pointer}
+.small{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+td,th{padding:10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px}
+code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px}
+</style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="top">
-    <a class="btn" href="/app">← App</a>
-    <button class="btn" onclick="logout()">Logout</button>
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px">
+    <button onclick="location.href='/app'" class="primary">⬅ App</button>
+    <div style="font-weight:900">Profile</div>
+    <button onclick="logout()">Logout</button>
   </div>
 
   <div class="card">
-    <div class="row" style="justify-content:space-between">
-      <div>
-        <div style="font-weight:1000;font-size:18px" id="info">...</div>
-        <div class="small" id="meta">...</div>
-      </div>
-      <div class="row">
-        <img id="av" style="display:none;width:54px;height:54px;border-radius:16px;border:1px solid rgba(255,255,255,.12);object-fit:cover" alt="avatar"/>
-        <div id="avfb" class="small">Logo profil bisa di-set di bawah.</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Logo Profile</div>
     <div class="row">
-      <div style="flex:1 1 300px"><input id="url" placeholder="Avatar URL (https://...png/jpg/webp)"/></div>
-      <button class="btn primary" onclick="saveAvatar()">Simpan</button>
+      <div class="avatar">
+        <img id="av" style="display:none">
+        <div id="avfb" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-weight:900">👤</div>
+      </div>
+      <div style="flex:1;min-width:220px">
+        <div id="info" style="font-weight:900"></div>
+        <div class="small" id="meta"></div>
+
+        <div style="margin-top:10px" class="row">
+          <input id="url" placeholder="Avatar URL (https://...)">
+          <button class="primary" onclick="saveAvatar()">Simpan Logo</button>
+        </div>
+        <div class="small" id="msg"></div>
+      </div>
     </div>
-    <div id="msg" class="small" style="margin-top:8px"></div>
   </div>
 
   <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Join Premium</div>
+    <div style="font-weight:900;margin-bottom:8px">Join Langganan (Pembayaran)</div>
     <div class="row">
-      <div style="flex:1 1 240px">
-        <select id="plan">
-          <option value="premium_30d">Premium 30 hari</option>
-          <option value="premium_90d">Premium 90 hari</option>
-        </select>
-      </div>
-      <div style="flex:1 1 240px">
-        <select id="method">
-          <option value="qris">QRIS</option>
-          <option value="dana">DANA</option>
-          <option value="seabank">SeaBank</option>
-        </select>
-      </div>
-      <button class="btn primary" onclick="createTx()">Buat Transaksi</button>
+      <select id="plan">
+        <option value="premium_30d">Premium 30 hari</option>
+        <option value="premium_90d">Premium 90 hari</option>
+      </select>
+      <select id="method">
+        <option value="qris">QRIS</option>
+        <option value="dana">DANA</option>
+        <option value="seabank">SeaBank</option>
+      </select>
+      <button class="primary" onclick="createTx()">Buat Pembayaran</button>
     </div>
-    <div id="payBox" class="small" style="margin-top:10px"></div>
+    <div id="payBox" style="margin-top:12px"></div>
+    <div class="small" style="margin-top:10px;opacity:.95">Setelah transfer, <b>upload bukti</b> di Riwayat Transaksi (status PENDING).</div>
+    <div class="small" style="margin-top:10px">
+      Status premium akan aktif setelah transaksi di-set <b>PAID</b> oleh admin.
+    </div>
   </div>
 
   <div class="card">
     <div style="font-weight:900;margin-bottom:8px">Riwayat Transaksi</div>
     <div id="txBox" class="small">Memuat…</div>
-  </div>
-</div>
-
-<!-- modal bukti transaksi -->
-<div class="modal" id="proofModal" onclick="closeProof(event)">
-  <div class="box" onclick="event.stopPropagation()">
-    <div class="top">
-      <div style="font-weight:900">Bukti Transaksi</div>
-      <button class="btn" onclick="closeProof()">Tutup</button>
-    </div>
-    <div id="proofBody" class="small">-</div>
   </div>
 </div>
 

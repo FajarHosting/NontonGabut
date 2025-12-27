@@ -1,151 +1,93 @@
 <!doctype html>
-<html>
+<html lang="id">
 <head>
-  <meta charset="utf-8"/>
-  <meta name="viewport" content="width=device-width, initial-scale=1"/>
-  <title>Admin Panel</title>
-  <style>
-    :root{
-      --bg:#070a12; --card:rgba(255,255,255,.06); --border:rgba(255,255,255,.10);
-      --text:#eaf0ff; --muted:rgba(255,255,255,.72); --accent:#79d2ff; --accent2:#8b5cf6;
-      --danger:#ef4444;
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial;
-      background:radial-gradient(1200px 800px at 15% 10%, rgba(121,210,255,.18), transparent 60%),
-                 radial-gradient(900px 600px at 90% 20%, rgba(139,92,246,.16), transparent 60%),
-                 linear-gradient(180deg,#050712,#070a12 40%, #050712);
-      color:var(--text);
-    }
-    a{color:inherit;text-decoration:none}
-    .wrap{max-width:1100px;margin:0 auto;padding:18px}
-    .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px}
-    .pill{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:999px;
-          border:1px solid var(--border);background:rgba(255,255,255,.05)}
-    .btn{appearance:none;border:1px solid var(--border);background:rgba(255,255,255,.06);
-         color:var(--text);padding:10px 14px;border-radius:14px;font-weight:700;cursor:pointer}
-    .btn.primary{background:linear-gradient(135deg,var(--accent),var(--accent2));border:0}
-    .btn.ghost{background:transparent}
-    .grid{display:grid;grid-template-columns:1fr;gap:14px}
-    @media(min-width:980px){.grid{grid-template-columns:1fr 1fr}}
-    .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px}
-    .h{font-weight:900;letter-spacing:.2px;margin:0 0 10px 0}
-    .small{color:var(--muted);font-size:13px}
-    .row{display:flex;gap:10px;flex-wrap:wrap}
-    .field{flex:1 1 220px;min-width:180px}
-    input,select{
-      width:100%;padding:12px 12px;border-radius:14px;border:1px solid var(--border);
-      background:rgba(0,0,0,.25);color:var(--text);outline:none
-    }
-    input::placeholder{color:rgba(255,255,255,.45)}
-    table{width:100%;border-collapse:collapse}
-    td,th{padding:10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px}
-    .tableWrap{width:100%;overflow:auto;border:1px solid rgba(255,255,255,.10);border-radius:16px}
-    .tableWrap table{min-width:760px}
-    .thumb{width:46px;height:46px;border-radius:12px;border:1px solid rgba(255,255,255,.12);object-fit:cover;background:rgba(0,0,0,.25)}
-    .tag{display:inline-flex;gap:6px;align-items:center;padding:6px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.06);font-size:12px}
-    .link{color:var(--accent);font-weight:800}
-    .danger{color:var(--danger);font-weight:800}
-
-    /* modal */
-    .modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;padding:18px;z-index:50}
-    .modal .box{width:min(820px,100%);background:rgba(10,14,24,.92);border:1px solid var(--border);border-radius:18px;padding:14px}
-    .modal .top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .modal img{width:100%;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#000}
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Admin</title>
+<style>
+:root{--bg:#0b1020;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#eaf0ff;--muted:rgba(234,240,255,.72);--a:#6ee7ff;--b:#a78bfa}
+*{box-sizing:border-box;font-family:system-ui}
+body{margin:0;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--text)}
+.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+input,select,button{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text)}
+button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));color:#071018;font-weight:900;cursor:pointer}
+.btn{cursor:pointer}
+.small{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+td,th{padding:10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:left}
+a{color:var(--a);text-decoration:none}
+a:hover{text-decoration:underline}
+code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px}
+</style>
 </head>
 <body>
 <div class="wrap">
-  <div class="topbar">
-    <div class="row" style="align-items:center;gap:10px">
-      <a class="btn ghost" href="/app">← App</a>
-      <div style="font-weight:1000">Admin Panel</div>
-    </div>
+  <div class="row" style="justify-content:space-between;margin-bottom:10px">
+    <button class="primary" onclick="location.href='/app'">⬅ App</button>
+    <div style="font-weight:900">Admin Panel</div>
     <button class="btn" onclick="logout()">Logout</button>
   </div>
 
-  <div class="grid">
-    <div class="card">
-      <div class="h">Tambah Film Baru</div>
-      <div class="row">
-        <div class="field"><input id="title" placeholder="Judul"/></div>
-        <div class="field">
-          <select id="type">
-            <option>Anime</option><option>Donghua</option><option>Drakor</option><option>Dracin</option>
-          </select>
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div class="field"><input id="coverUrl" placeholder="Cover URL"/></div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div class="field"><input id="genres" placeholder="Genres (pisahkan koma: action, romance)"/></div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div class="field"><input id="synopsis" placeholder="Sinopsis (opsional)"/></div>
-        <button class="btn primary" onclick="createMovie()">Tambah Film</button>
-      </div>
-      <div id="msgMovie" class="small" style="margin-top:8px"></div>
-    </div>
-
-    <div class="card">
-      <div class="h">Tambah Episode (Tanpa Bikin Film Baru)</div>
-      <div class="row">
-        <div class="field">
-          <select id="moviePick"></select>
-        </div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div class="field"><input id="epNo" placeholder="Episode number (mis. 11)"/></div>
-        <div class="field"><input id="epUrl" placeholder="Video URL"/></div>
-      </div>
-      <div class="row" style="margin-top:10px">
-        <div class="field"><input id="epTitle" placeholder="Judul episode (opsional)"/></div>
-        <div class="field"><input id="epThumb" placeholder="Thumb URL (opsional)"/></div>
-        <button class="btn primary" onclick="addEpisode()">Tambah Episode</button>
-      </div>
-      <div class="small" style="margin-top:8px">
-        Tips Google Drive:
-        <span class="tag">iframe: <span class="link">/file/d/ID/preview</span></span>
-        <span class="tag">direct mp4: <span class="link">uc?export=download&id=ID</span></span>
-      </div>
-      <div id="msgEp" class="small" style="margin-top:8px"></div>
-    </div>
-  </div>
-
   <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Transaksi Pending</div>
-    <div class="tableWrap">
-      <div id="txTable" class="small">Memuat…</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Daftar User</div>
-    <div class="tableWrap">
-      <div id="userTable" class="small">Memuat…</div>
-    </div>
-  </div>
-
-  <div class="card">
-    <div class="h">Grant Premium Manual</div>
+    <div style="font-weight:900;margin-bottom:8px">Tambah Film Baru</div>
     <div class="row">
-      <div class="field"><input id="grantUser" placeholder="username"/></div>
-      <div class="field"><input id="grantDays" placeholder="days" value="30"/></div>
-      <button class="btn primary" onclick="grantPremium()">Grant</button>
+      <input id="title" placeholder="Judul">
+      <select id="type">
+        <option value="anime">anime</option>
+        <option value="donghua">donghua</option>
+        <option value="drakor">drakor</option>
+        <option value="dracin">dracin</option>
+      </select>
+      <input id="coverUrl" placeholder="Cover URL (https://...)">
     </div>
-    <div id="msgGrant" class="small" style="margin-top:8px"></div>
+    <div style="margin-top:10px" class="row">
+      <input id="genres" placeholder="Genre (pisahkan dengan koma: action, romance)">
+      <input id="synopsis" placeholder="Sinopsis singkat">
+      <button class="primary" onclick="addContent()">Tambah Film</button>
+    </div>
+    <div class="small" id="msg1"></div>
   </div>
-</div>
 
-<div class="modal" id="proofModal" onclick="closeProof(event)">
-  <div class="box" onclick="event.stopPropagation()">
-    <div class="top">
-      <div style="font-weight:900">Bukti Transaksi</div>
-      <button class="btn" onclick="closeProof()">Tutup</button>
+  <div class="card">
+    <div style="font-weight:900;margin-bottom:8px">Tambah Episode (tanpa bikin film baru)</div>
+    <div class="row">
+      <select id="contentId"></select>
+      <input id="epNum" type="number" placeholder="Episode #">
+      <input id="epTitle" placeholder="Judul episode (opsional)">
     </div>
-    <div id="proofBody" class="small"></div>
+    <div style="margin-top:10px" class="row">
+      <input id="videoUrl" placeholder="Video URL (Drive / mp4 / embed)">
+      <input id="thumbUrl" placeholder="Thumb URL (opsional)">
+      <button class="primary" onclick="addEpisode()">Tambah Episode</button>
+    </div>
+    <div class="small" id="msg2"></div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:900;margin-bottom:8px">Riwayat Join Langganan</div>
+    <div class="row" style="margin-bottom:10px">
+      <select id="txStatus">
+        <option value="PENDING">PENDING</option>
+        <option value="PAID">PAID</option>
+        <option value="REJECTED">REJECTED</option>
+        <option value="ALL">ALL</option>
+      </select>
+      <button class="btn" onclick="loadTx()">Refresh</button>
+      <div class="small">Bukti transfer + username sudah tampil di tabel.</div>
+    </div>
+    <div id="txTable" class="small">Memuat…</div>
+  </div>
+
+  <div class="card">
+    <div style="font-weight:900;margin-bottom:8px">Grant Premium Manual</div>
+    <div class="row">
+      <input id="uname" placeholder="username">
+      <input id="days" type="number" value="30" placeholder="days">
+      <button class="primary" onclick="grant()">Grant</button>
+    </div>
+    <div class="small" id="msg3"></div>
   </div>
 </div>
 
