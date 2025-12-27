@@ -2,19 +2,22 @@ const mongoose = require("mongoose");
 
 const TransactionSchema = new mongoose.Schema(
   {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true, index: true },
     plan: { type: String, enum: ["premium_30d", "premium_90d"], required: true },
     amountIDR: { type: Number, required: true },
     method: { type: String, enum: ["qris", "dana", "seabank"], required: true },
     status: { type: String, enum: ["PENDING", "PAID", "REJECTED"], default: "PENDING" },
+    note: { type: String, default: "" },
 
-    // Bukti transaksi (opsional). Disarankan: kompres di browser → simpan DataURL kecil.
-    proofDataUrl: { type: String, default: "" }, // contoh: data:image/jpeg;base64,...
-    proofUrl: { type: String, default: "" },     // contoh: https://drive.google.com/...
+    // Bukti transfer (opsional): foto (dataURL kompres) / link.
+    proofDataUrl: { type: String, default: "" },
+    proofUrl: { type: String, default: "" },
     proofFileName: { type: String, default: "" },
-    proofUploadedAt: { type: Date, default: null },
+    proofMime: { type: String, default: "" },
+    proofUploadedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );
 
-module.exports = mongoose.model("Transaction", TransactionSchema);
+// Serverless warm reuse (Vercel): hindari OverwriteModelError
+module.exports = mongoose.models.Transaction || mongoose.model("Transaction", TransactionSchema);
