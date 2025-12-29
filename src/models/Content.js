@@ -4,14 +4,7 @@ const EpisodeSchema = new mongoose.Schema(
   {
     episodeNumber: { type: Number, required: true },
     title: { type: String, default: "" },
-
-    // Backward-compatible:
-    // - If videoProvider === "url": use videoUrl (mp4/drive/embed/iframe src)
-    // - If videoProvider === "vimeo": use vimeoId (numeric id) and ignore videoUrl
-    videoProvider: { type: String, enum: ["url", "vimeo"], default: "url" },
-    videoUrl: { type: String, default: "" },
-    vimeoId: { type: String, default: "" },
-
+    videoUrl: { type: String, required: true },
     thumbUrl: { type: String, default: "" }
   },
   { _id: false }
@@ -24,6 +17,14 @@ const ContentSchema = new mongoose.Schema(
     synopsis: { type: String, default: "" },
     genres: { type: [String], default: [], index: true },
     coverUrl: { type: String, default: "" },
+
+    // Mapping ke TMDb (untuk tombol "Tonton di platform resmi")
+    // NOTE: TMDb hanya metadata/provider list, bukan video.
+    tmdb: {
+      mediaType: { type: String, enum: ["", "tv", "movie"], default: "" },
+      id: { type: Number, default: 0 }
+    },
+
     episodes: { type: [EpisodeSchema], default: [] }
   },
   { timestamps: true }
