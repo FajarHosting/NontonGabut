@@ -20,44 +20,16 @@ body{margin:0;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--t
 .epBtn{white-space:nowrap;padding:10px 12px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);cursor:pointer;color:var(--text);font-weight:800}
 .epBtn.active{background:linear-gradient(135deg,var(--a),var(--b));border:none;color:#071018}
 
-/* PLAYER STABIL DI MOBILE (tanpa mode desktop) */
-.playerFrame{
-  position:relative;
-  width:100%;
-  aspect-ratio:16/9;
-  background:#000;
-}
-.playerFrame iframe,
-.playerFrame video{
-  position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
-  border:0;
-  display:block;
-  background:#000;
-}
+.playerFrame{position:relative;width:100%;aspect-ratio:16/9;background:#000}
+.playerFrame iframe,.playerFrame video{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
+.frameActions{position:absolute;top:10px;right:10px;display:flex;gap:8px;z-index:5}
+.miniBtn{padding:8px 10px;border-radius:12px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.35);color:var(--text);cursor:pointer;font-weight:900;font-size:12px;backdrop-filter:blur(10px)}
 
-/* overlay tombol untuk iframe (atau fallback) */
-.frameActions{
-  position:absolute;
-  top:10px;
-  right:10px;
-  display:flex;
-  gap:8px;
-  z-index:5;
-}
-.miniBtn{
-  padding:8px 10px;
-  border-radius:12px;
-  border:1px solid rgba(255,255,255,.18);
-  background:rgba(0,0,0,.35);
-  color:var(--text);
-  cursor:pointer;
-  font-weight:900;
-  font-size:12px;
-  backdrop-filter:blur(10px);
-}
+.provSection{margin-top:10px}
+.provTitle{font-weight:900;margin:8px 0 6px}
+.provWrap{display:flex;flex-wrap:wrap;gap:8px}
+.pill{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05)}
+.pill img{width:20px;height:20px;border-radius:6px;object-fit:cover}
 </style>
 </head>
 <body>
@@ -78,6 +50,18 @@ body{margin:0;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--t
   <div class="panel">
     <div style="font-weight:900;margin-bottom:8px">Episode</div>
     <div class="epRow" id="eps"></div>
+  </div>
+
+  <div class="panel" id="providerPanel">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap">
+      <div style="font-weight:900">Tonton di Platform Resmi</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <span class="small">Region</span>
+        <select id="regionSel" class="btn" style="padding:10px 12px"></select>
+        <button class="btn" onclick="reloadProviders()">Refresh</button>
+      </div>
+    </div>
+    <div id="providersBox" class="small" style="margin-top:10px">Memuat…</div>
   </div>
 
   <div class="panel">

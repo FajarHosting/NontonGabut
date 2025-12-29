@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Admin</title>
 <style>
-:root{--bg:#0b1020;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.10);--text:#eaf0ff;--muted:rgba(234,240,255,.72);--a:#6ee7ff;--b:#a78bfa}
+:root{--bg:#0b1020;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#eaf0ff;--muted:rgba(234,240,255,.72);--a:#6ee7ff;--b:#a78bfa}
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--text)}
 .wrap{max-width:1100px;margin:0 auto;padding:14px}
@@ -15,12 +15,23 @@ input,select,button{padding:12px;border-radius:14px;border:1px solid var(--borde
 button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));color:#071018;font-weight:900;cursor:pointer}
 .btn{cursor:pointer}
 .small{font-size:12px;color:var(--muted)}
+table{width:100%;border-collapse:collapse}
+td,th{padding:10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:left}
+a{color:var(--a);text-decoration:none}
+a:hover{text-decoration:underline}
+code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px}
 </style>
 </head>
 <body>
 <div class="wrap">
+  <div class="row" style="justify-content:space-between;margin-bottom:10px">
+    <button class="primary" onclick="location.href='/app'">⬅ App</button>
+    <div style="font-weight:900">ADMIN / CREATOR</div>
+    <button class="btn" onclick="logout()">Logout</button>
+  </div>
+
   <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Tambah Konten Baru</div>
+    <div style="font-weight:900;margin-bottom:8px">Tambah Film Baru</div>
     <div class="row">
       <input id="title" placeholder="Judul">
       <select id="type">
@@ -29,12 +40,12 @@ button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));
         <option value="drakor">drakor</option>
         <option value="dracin">dracin</option>
       </select>
-      <input id="coverUrl" placeholder="Cover URL">
+      <input id="coverUrl" placeholder="Cover URL (opsional, kosongkan untuk auto TMDb)">
     </div>
-    <div class="row" style="margin-top:10px">
-      <input id="genres" placeholder="Genre (pisah koma), contoh: action, fantasy">
-      <input id="synopsis" placeholder="Sinopsis (opsional)" style="flex:1;min-width:240px">
-      <button class="primary" onclick="addContent()">Tambah Konten</button>
+    <div style="margin-top:10px" class="row">
+      <input id="genres" placeholder="Genre (pisahkan dengan koma: action, romance)">
+      <input id="synopsis" placeholder="Sinopsis singkat">
+      <button class="primary" onclick="addContent()">Tambah Film</button>
     </div>
     <div class="small" id="msg1"></div>
   </div>
@@ -46,23 +57,13 @@ button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));
       <input id="epNum" type="number" placeholder="Episode #">
       <input id="epTitle" placeholder="Judul episode (opsional)">
     </div>
-
     <div style="margin-top:10px" class="row">
-      <select id="videoProvider">
-        <option value="vimeo">Vimeo (pakai Video ID)</option>
-        <option value="url">URL (mp4 / drive / embed)</option>
-      </select>
-      <input id="vimeoId" placeholder="Vimeo Video ID (contoh: 1149982593)">
-      <input id="videoUrl" placeholder="Video URL (jika pilih URL)">
+      <input id="vimeoId" placeholder="Vimeo ID (opsional)">
+      <input id="videoUrl" placeholder="Video URL (Drive / mp4 / embed) — kosongkan jika pakai Vimeo ID">
       <input id="thumbUrl" placeholder="Thumb URL (opsional)">
       <button class="primary" onclick="addEpisode()">Tambah Episode</button>
-      <button class="btn" onclick="updateEpisode()">Update Episode</button>
     </div>
-
     <div class="small" id="msg2"></div>
-    <div class="small" style="margin-top:8px">
-      Catatan: jika episode sudah ada, gunakan tombol <b>Update Episode</b> untuk mengubah Vimeo ID/URL.
-    </div>
   </div>
 
   <div class="card">
@@ -74,6 +75,8 @@ button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));
         <option value="REJECTED">REJECTED</option>
         <option value="ALL">ALL</option>
       </select>
+      <button class="btn" onclick="loadTx()">Refresh</button>
+      <div class="small">Bukti transfer + username sudah tampil di tabel.</div>
     </div>
     <div id="txTable" class="small">Memuat…</div>
   </div>
@@ -85,7 +88,7 @@ button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));
       <input id="days" type="number" value="30" placeholder="days">
       <button class="primary" onclick="grant()">Grant</button>
     </div>
-    <div class="small" id="msg3"></div>
+    <div class="small" id="msg3"></divs>
   </div>
 </div>
 
