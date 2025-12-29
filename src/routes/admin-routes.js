@@ -9,6 +9,17 @@ const { attachUser, requireAdmin } = require("../middleware/auth");
 router.use(attachUser);
 router.use(requireAdmin);
 
+function normalizeProvider(p) {
+  const s = String(p || "").trim().toLowerCase();
+  return s === "vimeo" ? "vimeo" : "url";
+}
+function cleanVimeoId(id) {
+  const v = String(id || "").trim();
+  if (!v) return "";
+  if (!/^[0-9]+$/.test(v)) return "__INVALID__";
+  return v;
+}
+
 // list konten untuk dropdown admin
 router.get("/contents", async (_req, res) => {
   const items = await Content.find({}).sort({ createdAt: -1 }).limit(200).lean();
@@ -53,11 +64,20 @@ router.post("/content/add-episode", async (req, res) => {
   const ep = req.body.episode || {};
 
   const episodeNumber = Number(ep.episodeNumber || 0);
-  const videoUrl = String(ep.videoUrl || "").trim();
   const title = String(ep.title || "").trim();
   const thumbUrl = String(ep.thumbUrl || "").trim();
 
-  if (!contentId || !episodeNumber || !videoUrl) return res.status(400).json({ error: "BAD_INPUT" });
+  const videoProvider = normalizeProvider(ep.videoProvider);
+  const vimeoId = cleanVimeoId(ep.vimeoId);
+  const videoUrl = String(ep.videoUrl || "").trim();
+
+  if (!contentId || !episodeNumber) return res.status(400).json({ error: "BAD_INPUT" });
+
+  if (videoProvider === "vimeo") {
+    if (!vimeoId || vimeoId === "__INVALID__") return res.status(400).json({ error: "BAD_VIMEO_ID" });
+  } else {
+    if (!videoUrl) return res.status(400).json({ error: "BAD_INPUT" });
+  }
 
   const item = await Content.findById(contentId);
   if (!item) return res.status(404).json({ error: "NOT_FOUND" });
@@ -66,8 +86,55 @@ router.post("/content/add-episode", async (req, res) => {
   const exists = (item.episodes || []).some((e) => Number(e.episodeNumber) === episodeNumber);
   if (exists) return res.status(400).json({ error: "EP_EXISTS" });
 
-  item.episodes.push({ episodeNumber, videoUrl, title, thumbUrl });
+  item.episodes.push({
+    episodeNumber,
+    title,
+    thumbUrl,
+    videoProvider,
+    vimeoId: videoProvider === "vimeo" ? vimeoId : "",
+    videoUrl: videoProvider === "url" ? videoUrl : ""
+  });
+
   // sort by episodeNumber
+  item.episodes.sort((a, b) => Number(a.episodeNumber) - Number(b.episodeNumber));
+  await item.save();
+
+  res.json({ ok: true });
+});
+
+// update episode (admin set Vimeo ID / ganti URL / ganti judul/thumb)
+router.post("/content/update-episode", async (req, res) => {
+  const contentId = String(req.body.contentId || "").trim();
+  const episodeNumber = Number(req.body.episodeNumber || 0);
+
+  const title = String(req.body.title || "").trim();
+  const thumbUrl = String(req.body.thumbUrl || "").trim();
+
+  const videoProvider = normalizeProvider(req.body.videoProvider);
+  const vimeoId = cleanVimeoId(req.body.vimeoId);
+  const videoUrl = String(req.body.videoUrl || "").trim();
+
+  if (!contentId || !episodeNumber) return res.status(400).json({ error: "BAD_INPUT" });
+
+  if (videoProvider === "vimeo") {
+    if (!vimeoId || vimeoId === "__INVALID__") return res.status(400).json({ error: "BAD_VIMEO_ID" });
+  } else {
+    if (!videoUrl) return res.status(400).json({ error: "BAD_INPUT" });
+  }
+
+  const item = await Content.findById(contentId);
+  if (!item) return res.status(404).json({ error: "NOT_FOUND" });
+
+  const idx = (item.episodes || []).findIndex((e) => Number(e.episodeNumber) === episodeNumber);
+  if (idx < 0) return res.status(404).json({ error: "EPISODE_NOT_FOUND" });
+
+  const old = item.episodes[idx];
+  old.title = title || old.title || "";
+  old.thumbUrl = thumbUrl || old.thumbUrl || "";
+  old.videoProvider = videoProvider;
+  old.vimeoId = videoProvider === "vimeo" ? vimeoId : "";
+  old.videoUrl = videoProvider === "url" ? videoUrl : "";
+
   item.episodes.sort((a, b) => Number(a.episodeNumber) - Number(b.episodeNumber));
   await item.save();
 
