@@ -11,13 +11,13 @@ async function getJSON(u) {
 }
 async function postJSON(u, body) {
   const r = await fetch(u, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-  const j = await r.json();
+  const j = await r.json().catch(() => ({}));
   if (!r.ok) throw j;
   return j;
 }
 
 function esc(s) {
-  return String(s ?? "")
+  return String(s || "")
     .replaceAll("&", "&amp;")
     .replaceAll("<", "&lt;")
     .replaceAll(">", "&gt;")
@@ -25,175 +25,123 @@ function esc(s) {
     .replaceAll("'", "&#039;");
 }
 
-function extractDriveId(url) {
-  try {
-    const u = new URL(String(url));
-    const m = u.pathname.match(/\/file\/d\/([^/]+)/);
-    if (m && m[1]) return m[1];
-    const id = u.searchParams.get("id");
-    if (id) return id;
-  } catch {}
-  const mm = String(url || "").match(/\/file\/d\/([^/]+)/);
-  return mm && mm[1] ? mm[1] : null;
-}
-function driveDirectUrl(fileId) {
-  // ini yang bikin kontrol video muncul di HP (tanpa desktop mode)
-  return `https://drive.google.com/uc?export=download&id=${fileId}`;
-}
-function drivePreviewUrl(fileId) {
-  return `https://drive.google.com/file/d/${fileId}/preview`;
+function normalizeProvider(p) {
+  const s = String(p || "").trim().toLowerCase();
+  return s === "vimeo" ? "vimeo" : "url";
 }
 
-function openFrame(url) {
-  window.open(String(url), "_blank", "noopener");
-}
-function fsFrame() {
-  const el = document.getElementById("playerVideo") || document.getElementById("playerIframe");
-  if (!el) return;
-  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
+function getEmbedUrl(ep) {
+  if (!ep) return "";
+  const provider = normalizeProvider(ep.videoProvider);
+  const vimeoId = String(ep.vimeoId || "").trim();
+
+  // support legacy: kalau admin cuma isi videoUrl dengan player.vimeo.com
+  const url = String(ep.videoUrl || "").trim();
+
+  if (provider === "vimeo" || vimeoId) {
+    if (!/^[0-9]+$/.test(vimeoId)) return "";
+    return `https://player.vimeo.com/video/${encodeURIComponent(vimeoId)}`;
+  }
+
+  return url;
 }
 
-function renderPlayer(url) {
-  const raw = String(url || "").trim();
-  const driveId = extractDriveId(raw);
-
-  // Google Drive: pakai <video controls> agar kontrol muncul di HP
-  if (driveId) {
-    const direct = driveDirectUrl(driveId);
-    const preview = drivePreviewUrl(driveId);
+function renderPlayer(embedUrl) {
+  if (!embedUrl) {
     return `
-      <div class="playerFrame">
-        <video id="playerVideo" controls playsinline preload="metadata"
-          src="${esc(direct)}" data-fallback="${esc(preview)}"></video>
-        <div class="frameActions" id="frameActions" style="display:none">
-          <button class="miniBtn" onclick="openFrame('${esc(preview)}')">Open</button>
-          <button class="miniBtn" onclick="fsFrame()">Full</button>
-        </div>
+      <div style="padding:18px">
+        <div style="font-weight:900;margin-bottom:6px">Player tidak tersedia</div>
+        <div class="small">Admin belum mengatur sumber video untuk episode ini.</div>
       </div>
     `;
   }
 
-  // URL direct video
-  const isVideo = /\.(mp4|webm|m3u8)(\?|$)/i.test(raw);
-  if (isVideo) {
-    return `
-      <div class="playerFrame">
-        <video id="playerVideo" controls playsinline preload="metadata" src="${esc(raw)}"></video>
-        <div class="frameActions" id="frameActions" style="display:none">
-          <button class="miniBtn" onclick="openFrame('${esc(raw)}')">Open</button>
-          <button class="miniBtn" onclick="fsFrame()">Full</button>
-        </div>
-      </div>
-    `;
-  }
-
-  // selain itu -> iframe + tombol overlay (Open/Full)
   return `
     <div class="playerFrame">
-      <iframe id="playerIframe" src="${esc(raw)}"
+      <iframe id="playerIframe" src="${esc(embedUrl)}"
         allow="autoplay; fullscreen; picture-in-picture"
         allowfullscreen></iframe>
       <div class="frameActions" id="frameActions">
-        <button class="miniBtn" onclick="openFrame('${esc(raw)}')">Open</button>
+        <button class="miniBtn" onclick="openFrame('${esc(embedUrl)}')">Open</button>
         <button class="miniBtn" onclick="fsFrame()">Full</button>
       </div>
     </div>
   `;
 }
 
-function setupPlayerFallback() {
-  const v = document.getElementById("playerVideo");
-  if (!v) return;
-
-  const fb = v.getAttribute("data-fallback");
-  v.addEventListener("error", () => {
-    if (!fb) return;
-    const playerBox = document.getElementById("playerBox");
-    if (!playerBox) return;
-    playerBox.innerHTML = `
-      <div class="playerFrame">
-        <iframe id="playerIframe" src="${esc(fb)}"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowfullscreen></iframe>
-        <div class="frameActions" id="frameActions">
-          <button class="miniBtn" onclick="openFrame('${esc(fb)}')">Open</button>
-          <button class="miniBtn" onclick="fsFrame()">Full</button>
-        </div>
+function renderLocked() {
+  return `
+    <div style="padding:18px">
+      <div style="font-weight:900;margin-bottom:6px">Episode Terkunci</div>
+      <div class="small">
+        Silakan unlock via iklan atau join premium untuk menonton episode ini.
       </div>
-    `;
-  });
+    </div>
+  `;
 }
 
-function epBtnHTML(id, ep, active) {
-  return `<button class="epBtn ${active ? "active" : ""}" onclick="location.href='/watch?id=${id}&ep=${ep}'">EP ${ep}</button>`;
+function openFrame(url) {
+  window.open(url, "_blank", "noopener");
+}
+function fsFrame() {
+  const f = document.getElementById("playerIframe");
+  if (!f) return;
+  if (f.requestFullscreen) f.requestFullscreen().catch(()=>{});
 }
 
-let _id;
-let _ep;
-let _item;
-
-async function nextEp() {
-  const eps = (_item.episodes || []).map(e => Number(e.episodeNumber)).sort((a,b)=>a-b);
-  const idx = eps.indexOf(_ep);
-  if (idx >= 0 && idx < eps.length - 1) location.href = `/watch?id=${_id}&ep=${eps[idx + 1]}`;
-}
-
-async function unlockAd() {
-  await postJSON("/api/watch/unlock-ad", { contentId: _id, episode: _ep });
-  location.reload();
-}
-
-async function goPremium() {
-  location.href = "/profile";
-}
+let _content = null;
 
 async function main() {
   const id = qs("id");
   const ep = Number(qs("ep") || 1);
-  _id = id;
-  _ep = ep;
 
-  const title = document.getElementById("title");
-  const playerBox = document.getElementById("playerBox");
-  const actions = document.getElementById("actions");
+  const titleEl = document.getElementById("title");
   const status = document.getElementById("status");
+  const playerBox = document.getElementById("playerBox");
+  const meta = document.getElementById("meta");
   const eps = document.getElementById("eps");
+  const actions = document.getElementById("actions");
 
   if (!id) {
-    title.textContent = "Content tidak ditemukan";
+    titleEl.textContent = "Konten tidak ditemukan";
+    status.textContent = "Akses: -";
+    playerBox.innerHTML = renderLocked();
     return;
   }
 
-  const me = await getJSON("/api/auth/me");
-  if (!me.user) {
-    location.href = "/login";
-    return;
-  }
+  const { item } = await getJSON(`/api/content/${encodeURIComponent(id)}`);
+  _content = item;
 
-  const detail = await getJSON("/api/content/" + id);
-  const item = detail.item;
-  _item = item;
-  title.textContent = item.title;
+  titleEl.textContent = item.title;
+  if (meta) meta.textContent = `${item.type} • ${item.genres && item.genres.length ? item.genres.join(", ") : "-"}`;
 
-  // episodes bar
-  const epsList = (item.episodes || []).map(e => Number(e.episodeNumber)).sort((a,b)=>a-b);
-  eps.innerHTML = epsList.map(n => epBtnHTML(id, n, n === ep)).join("");
+  // render episode list
+  const episodes = (item.episodes || []).slice().sort((a,b)=>Number(a.episodeNumber)-Number(b.episodeNumber));
+  eps.innerHTML = episodes
+    .map((x) => {
+      const n = Number(x.episodeNumber);
+      const active = n === ep ? " epBtnActive" : "";
+      return `<a class="epBtn${active}" href="/watch?id=${encodeURIComponent(id)}&ep=${n}">EP ${n}</a>`;
+    })
+    .join("");
 
-  const current = (item.episodes || []).find(e => Number(e.episodeNumber) === ep);
+  // episode current
+  const current = episodes.find((e) => Number(e.episodeNumber) === ep) || episodes[0];
   if (!current) {
-    status.textContent = "Episode tidak ditemukan.";
-    playerBox.innerHTML = "";
-    actions.innerHTML = "";
+    status.textContent = "Akses: -";
+    playerBox.innerHTML = renderLocked();
+    actions.innerHTML = `<button class="btn" onclick="location.href='/app'">Kembali</button>`;
     return;
   }
 
-  // access check
+  const embedUrl = getEmbedUrl(current);
+
+  // cek akses
   try {
     const can = await getJSON(`/api/watch/can-watch?contentId=${encodeURIComponent(id)}&episode=${ep}`);
     status.textContent = `Akses: ${can.mode}`;
 
-    playerBox.innerHTML = renderPlayer(current.videoUrl);
-    setupPlayerFallback();
+    playerBox.innerHTML = renderPlayer(embedUrl);
 
     // log history
     postJSON("/api/watch/log", { contentId: id, episode: ep }).catch(()=>{});
@@ -203,14 +151,40 @@ async function main() {
     `;
   } catch (e) {
     status.textContent = `Akses: LOCKED`;
-    playerBox.innerHTML = renderPlayer(current.videoUrl);
-    setupPlayerFallback();
+    playerBox.innerHTML = renderLocked();
 
     actions.innerHTML = `
       <button class="btn btnPrimary" onclick="unlockAd()">Unlock via Iklan</button>
       <button class="btn" onclick="goPremium()">Join Premium</button>
     `;
   }
+}
+
+async function nextEp() {
+  const id = qs("id");
+  const ep = Number(qs("ep") || 1);
+  if (!_content) return;
+
+  const episodes = (_content.episodes || []).slice().sort((a,b)=>Number(a.episodeNumber)-Number(b.episodeNumber));
+  const idx = episodes.findIndex((e) => Number(e.episodeNumber) === ep);
+  const next = episodes[idx + 1];
+  if (!next) return alert("Sudah episode terakhir.");
+  location.href = `/watch?id=${encodeURIComponent(id)}&ep=${Number(next.episodeNumber)}`;
+}
+
+async function unlockAd() {
+  const id = qs("id");
+  const ep = Number(qs("ep") || 1);
+  try {
+    await postJSON("/api/watch/unlock-ad", { contentId: id, episode: ep });
+    location.reload();
+  } catch (e) {
+    alert(e && e.error ? e.error : "Gagal unlock.");
+  }
+}
+
+function goPremium() {
+  location.href = "/billing";
 }
 
 window.nextEp = nextEp;
