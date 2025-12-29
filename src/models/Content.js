@@ -4,7 +4,14 @@ const EpisodeSchema = new mongoose.Schema(
   {
     episodeNumber: { type: Number, required: true },
     title: { type: String, default: "" },
-    videoUrl: { type: String, required: true },
+
+    // Backward-compatible:
+    // - If videoProvider === "url": use videoUrl (mp4/drive/embed/iframe src)
+    // - If videoProvider === "vimeo": use vimeoId (numeric id) and ignore videoUrl
+    videoProvider: { type: String, enum: ["url", "vimeo"], default: "url" },
+    videoUrl: { type: String, default: "" },
+    vimeoId: { type: String, default: "" },
+
     thumbUrl: { type: String, default: "" }
   },
   { _id: false }
