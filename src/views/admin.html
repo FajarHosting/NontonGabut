@@ -3,71 +3,217 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Admin</title>
+<title>Admin / Creator</title>
 <style>
-:root{--bg:#0b1020;--card:rgba(255,255,255,.06);--border:rgba(255,255,255,.12);--text:#eaf0ff;--muted:rgba(234,240,255,.72);--a:#6ee7ff;--b:#a78bfa}
+:root{
+  --bg:#0b1020;
+  --card:rgba(255,255,255,.06);
+  --border:rgba(255,255,255,.10);
+  --text:#eaf0ff;
+  --muted:rgba(234,240,255,.72);
+  --a:#6ee7ff;
+  --b:#a78bfa;
+}
 *{box-sizing:border-box;font-family:system-ui}
 body{margin:0;background:linear-gradient(180deg,#070a14,var(--bg));color:var(--text)}
-.wrap{max-width:1100px;margin:0 auto;padding:14px}
+.wrap{max-width:1100px;margin:0 auto;padding:14px 14px 18px}
+
+.topbar{
+  position:sticky;top:0;z-index:50;
+  padding:10px 0 14px;
+  backdrop-filter: blur(10px);
+}
+.topbarInner{
+  display:flex;gap:12px;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.04);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:12px 14px;
+}
+.brand{
+  display:flex;gap:12px;align-items:center;min-width:0
+}
+.logo{
+  width:44px;height:44px;border-radius:16px;
+  background:linear-gradient(135deg,var(--a),var(--b));
+  display:flex;align-items:center;justify-content:center;
+  color:#071018;font-weight:1000;
+  box-shadow:0 12px 30px rgba(0,0,0,.25);
+  flex:0 0 auto;
+}
+.brandTxt{min-width:0}
+.hTitle{
+  font-weight:1000;
+  letter-spacing:.6px;
+  font-size:14px;
+}
+.hSub{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:520px;
+}
+.badges{display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end}
+.badge{
+  font-size:12px;
+  padding:8px 10px;
+  border-radius:14px;
+  border:1px solid rgba(255,255,255,.14);
+  background:rgba(255,255,255,.05);
+  color:var(--text);
+  font-weight:900;
+  white-space:nowrap;
+}
+.badgeStrong{
+  border:none;
+  background:linear-gradient(135deg,var(--a),var(--b));
+  color:#071018;
+}
+
 .card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;margin-bottom:12px}
+.cardTitle{font-weight:1000;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.cardHint{font-size:12px;color:var(--muted)}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-input,select,button{padding:12px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text)}
-button.primary{border:none;background:linear-gradient(135deg,var(--a),var(--b));color:#071018;font-weight:900;cursor:pointer}
-.btn{cursor:pointer}
+
+input,select,button{
+  padding:12px;border-radius:14px;border:1px solid var(--border);
+  background:rgba(255,255,255,.05);color:var(--text)
+}
+input::placeholder{color:rgba(234,240,255,.45)}
+button.primary{
+  border:none;background:linear-gradient(135deg,var(--a),var(--b));
+  color:#071018;font-weight:1000;cursor:pointer
+}
+button.btn{cursor:pointer}
 .small{font-size:12px;color:var(--muted)}
-table{width:100%;border-collapse:collapse}
-td,th{padding:10px;border-bottom:1px solid rgba(255,255,255,.12);font-size:13px;text-align:left}
 a{color:var(--a);text-decoration:none}
 a:hover{text-decoration:underline}
-code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px}
+
+.grid2{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media (max-width:900px){
+  .grid2{grid-template-columns:1fr}
+  .hSub{max-width:260px}
+}
 </style>
 </head>
 <body>
+
 <div class="wrap">
-  <div class="row" style="justify-content:space-between;margin-bottom:10px">
-    <button class="primary" onclick="location.href='/app'">⬅ App</button>
-    <div style="font-weight:900">ADMIN / CREATOR</div>
-    <button class="btn" onclick="logout()">Logout</button>
+
+  <!-- HEADER -->
+  <div class="topbar">
+    <div class="topbarInner">
+      <div class="brand">
+        <div class="logo">A</div>
+        <div class="brandTxt">
+          <div class="hTitle">ADMIN / CREATOR</div>
+          <div class="hSub">Kelola konten, episode (Vimeo ID/URL), dan verifikasi langganan.</div>
+        </div>
+      </div>
+
+      <div class="badges">
+        <div class="badge">Panel</div>
+        <div class="badge badgeStrong">Creator Mode</div>
+      </div>
+    </div>
   </div>
 
-  <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Tambah Film Baru</div>
-    <div class="row">
-      <input id="title" placeholder="Judul">
-      <select id="type">
-        <option value="anime">anime</option>
-        <option value="donghua">donghua</option>
-        <option value="drakor">drakor</option>
-        <option value="dracin">dracin</option>
-      </select>
-      <input id="coverUrl" placeholder="Cover URL (opsional, kosongkan untuk auto TMDb)">
+  <!-- KONTEN + EPISODE -->
+  <div class="grid2">
+
+    <div class="card">
+      <div class="cardTitle">
+        <div>Tambah Konten Baru</div>
+        <div class="cardHint">Judul, type, cover, genre</div>
+      </div>
+
+      <div class="row">
+        <input id="title" placeholder="Judul" style="flex:1;min-width:200px">
+        <select id="type">
+          <option value="anime">anime</option>
+          <option value="donghua">donghua</option>
+          <option value="drakor">drakor</option>
+          <option value="dracin">dracin</option>
+          <option value="movie">movie</option>
+          <option value="tv">tv</option>
+        </select>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input id="coverUrl" placeholder="Cover URL" style="flex:1;min-width:240px">
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input id="genres" placeholder="Genre (pisah koma), contoh: action, fantasy" style="flex:1;min-width:240px">
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input id="synopsis" placeholder="Sinopsis (opsional)" style="flex:1;min-width:240px">
+        <button class="primary" onclick="addContent()">Tambah Konten</button>
+      </div>
+
+      <div class="small" id="msg1" style="margin-top:10px"></div>
     </div>
-    <div style="margin-top:10px" class="row">
-      <input id="genres" placeholder="Genre (pisahkan dengan koma: action, romance)">
-      <input id="synopsis" placeholder="Sinopsis singkat">
-      <button class="primary" onclick="addContent()">Tambah Film</button>
+
+    <div class="card">
+      <div class="cardTitle">
+        <div>Episode Manager</div>
+        <div class="cardHint">Tambah / Update Vimeo ID</div>
+      </div>
+
+      <div class="row">
+        <select id="contentId" style="flex:1;min-width:240px"></select>
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input id="dramaboxBookId" placeholder="Dramabox BookId (opsional)" style="flex:1;min-width:240px">
+        <button class="btn" onclick="saveDramaboxBookId()">Simpan BookId</button>
+        <button class="primary" onclick="syncDramaboxEpisodes()">Sync Episode (Dramabox)</button>
+      </div>
+      <div class="small" id="msgDramabox" style="margin-top:8px"></div>
+
+      <div class="row" style="margin-top:10px">
+        <input id="epNum" type="number" placeholder="Episode #" style="width:140px">
+        <input id="epTitle" placeholder="Judul episode (opsional)" style="flex:1;min-width:220px">
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <select id="videoProvider" style="min-width:220px">
+          <option value="vimeo">Vimeo (pakai Video ID)</option>
+          <option value="url">URL (mp4 / drive / embed)</option>
+        </select>
+        <input id="vimeoId" placeholder="Vimeo Video ID (contoh: 1149982593)" style="flex:1;min-width:240px">
+        <input id="videoUrl" placeholder="Video URL (jika pilih URL)" style="flex:1;min-width:240px">
+      </div>
+
+      <div class="row" style="margin-top:10px">
+        <input id="thumbUrl" placeholder="Thumb URL (opsional)" style="flex:1;min-width:240px">
+        <button class="primary" onclick="addEpisode()">Tambah Episode</button>
+        <button class="btn" onclick="updateEpisode()">Update Episode</button>
+      </div>
+
+      <div class="small" id="msg2" style="margin-top:10px"></div>
+      <div class="small" style="margin-top:8px">
+        Catatan: jika episode sudah ada, gunakan <b>Update Episode</b> untuk mengubah Vimeo ID/URL.
+      </div>
     </div>
-    <div class="small" id="msg1"></div>
+
   </div>
 
+  <!-- TRANSAKSI -->
   <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Tambah Episode (tanpa bikin film baru)</div>
-    <div class="row">
-      <select id="contentId"></select>
-      <input id="epNum" type="number" placeholder="Episode #">
-      <input id="epTitle" placeholder="Judul episode (opsional)">
+    <div class="cardTitle">
+      <div>Riwayat Join Langganan</div>
+      <div class="cardHint">Verifikasi pembayaran</div>
     </div>
-    <div style="margin-top:10px" class="row">
-      <input id="vimeoId" placeholder="Vimeo ID (opsional)">
-      <input id="videoUrl" placeholder="Video URL (Drive / mp4 / embed) — kosongkan jika pakai Vimeo ID">
-      <input id="thumbUrl" placeholder="Thumb URL (opsional)">
-      <button class="primary" onclick="addEpisode()">Tambah Episode</button>
-    </div>
-    <div class="small" id="msg2"></div>
-  </div>
 
-  <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Riwayat Join Langganan</div>
     <div class="row" style="margin-bottom:10px">
       <select id="txStatus">
         <option value="PENDING">PENDING</option>
@@ -75,21 +221,28 @@ code{background:rgba(0,0,0,.35);padding:2px 6px;border-radius:10px}
         <option value="REJECTED">REJECTED</option>
         <option value="ALL">ALL</option>
       </select>
-      <button class="btn" onclick="loadTx()">Refresh</button>
-      <div class="small">Bukti transfer + username sudah tampil di tabel.</div>
+      <div class="small">Tip: pilih status untuk filter.</div>
     </div>
+
     <div id="txTable" class="small">Memuat…</div>
   </div>
 
+  <!-- GRANT -->
   <div class="card">
-    <div style="font-weight:900;margin-bottom:8px">Grant Premium Manual</div>
+    <div class="cardTitle">
+      <div>Grant Premium Manual</div>
+      <div class="cardHint">Tambah hari premium user</div>
+    </div>
+
     <div class="row">
-      <input id="uname" placeholder="username">
-      <input id="days" type="number" value="30" placeholder="days">
+      <input id="uname" placeholder="username" style="min-width:220px">
+      <input id="days" type="number" value="30" placeholder="days" style="width:140px">
       <button class="primary" onclick="grant()">Grant</button>
     </div>
-    <div class="small" id="msg3"></divs>
+
+    <div class="small" id="msg3" style="margin-top:10px"></div>
   </div>
+
 </div>
 
 <script src="/public/js/admin.js"></script>
