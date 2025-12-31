@@ -19,10 +19,14 @@ router.get("/can-watch", requireLogin, async (req, res) => {
 
   const user = await User.findById(req.user._id);
 
-  if (user.isPremiumActive()) return res.json({ ok: true, mode: "PREMIUM" });
-  if (episode <= user.freeEpisodesLimit) return res.json({ ok: true, mode: "FREE" });
+  // Backward-compatible defaults (buat user lama yang field-nya belum ada)
+  const freeLimit = Number.isFinite(Number(user.freeEpisodesLimit)) ? Number(user.freeEpisodesLimit) : 10;
+  const unlockedEpisodes = Array.isArray(user.unlockedEpisodes) ? user.unlockedEpisodes : [];
 
-  const unlocked = (user.unlockedEpisodes || []).some(
+  if (user.isPremiumActive()) return res.json({ ok: true, mode: "PREMIUM" });
+  if (episode <= freeLimit) return res.json({ ok: true, mode: "FREE" });
+
+  const unlocked = unlockedEpisodes.some(
     (u) => String(u.contentId) === String(contentId) && Number(u.episode) === episode
   );
 
@@ -44,13 +48,18 @@ router.post("/unlock-ad", requireLogin, async (req, res) => {
   if (!epExists) return res.status(404).json({ error: "EPISODE_NOT_FOUND" });
 
   const user = await User.findById(req.user._id);
-  if (user.isPremiumActive()) return res.json({ ok: true, mode: "PREMIUM" });
 
-  if (episode <= user.freeEpisodesLimit) return res.json({ ok: true, mode: "FREE" });
+  // Backward-compatible defaults
+  const freeLimit = Number.isFinite(Number(user.freeEpisodesLimit)) ? Number(user.freeEpisodesLimit) : 10;
+  if (!Array.isArray(user.unlockedEpisodes)) user.unlockedEpisodes = [];
+
+  if (user.isPremiumActive()) return res.json({ ok: true, mode: "PREMIUM" });
+  if (episode <= freeLimit) return res.json({ ok: true, mode: "FREE" });
 
   const exists = user.unlockedEpisodes.some(
     (u) => String(u.contentId) === String(contentId) && Number(u.episode) === episode
   );
+
   if (!exists) {
     user.unlockedEpisodes.push({ contentId, episode, unlockedAt: new Date() });
     await user.save();
