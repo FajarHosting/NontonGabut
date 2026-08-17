@@ -1,6 +1,6 @@
 {
   "functions": {
-    "api/poll.py": {
+    "api/index.py": {
       "maxDuration": 60
     }
   }
