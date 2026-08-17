@@ -18,14 +18,23 @@ def _authorized(request):
 
 def handler(request):
     if request.method != "GET":
-        return {"ok": False, "error": "GET only"}, 405
+        return {
+            "ok": False,
+            "error": "GET only",
+        }, 405
 
     if not _authorized(request):
-        return {"ok": False, "error": "Unauthorized"}, 401
+        return {
+            "ok": False,
+            "error": "Unauthorized",
+        }, 401
 
     try:
         result = asyncio.run(poll_once())
         return result, 200
     except Exception as exc:
         print("POLL ERROR:", repr(exc))
-        return {"ok": False, "error": str(exc)}, 500
+        return {
+            "ok": False,
+            "error": str(exc),
+        }, 500
