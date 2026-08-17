@@ -21,6 +21,7 @@ from telegram.ext import (
     ContextTypes,
     MessageHandler,
     CallbackQueryHandler,
+    DictPersistence,
     filters
 )
 
@@ -84,6 +85,84 @@ from sheets_db import (
     get_poll_offset,
     set_poll_offset,
 )
+
+
+def ensure_user(user):
+    """Create/normalize a user record in Google Sheets."""
+    db = get_db()
+    uid = str(user.id)
+    info = db.get(uid)
+    changed = False
+
+    if not isinstance(info, dict):
+        info = {}
+        db[uid] = info
+        changed = True
+
+    name = user.first_name or "User"
+    if info.get("name") != name:
+        info["name"] = name
+        changed = True
+
+    if "saldo" not in info:
+        info["saldo"] = 0
+        changed = True
+
+    if not isinstance(info.get("pending_topup"), dict):
+        info["pending_topup"] = {}
+        changed = True
+
+    if not isinstance(info.get("state"), dict):
+        info["state"] = {}
+        changed = True
+
+    if changed:
+        save_db(db)
+
+    return db
+
+
+def get_user_saldo(user_id):
+    db = get_db()
+    info = db.get(str(user_id), {})
+    return safe_int(info.get("saldo", 0))
+
+
+def update_user_saldo(user_id, amount):
+    """Change a user's balance and persist it. Returns False on invalid balance."""
+    db = get_db()
+    uid = str(user_id)
+    if uid not in db:
+        return False
+
+    current = safe_int(db[uid].get("saldo", 0))
+    delta = safe_int(amount)
+    new_balance = current + delta
+    if new_balance < 0:
+        return False
+
+    db[uid]["saldo"] = new_balance
+    save_db(db)
+    return True
+
+
+def _persistence_from_db():
+    """Load Telegram user_data from Sheets for this short-lived invocation."""
+    db = get_db()
+    user_data = {}
+    for uid, info in db.items():
+        try:
+            key = int(uid)
+        except (TypeError, ValueError):
+            continue
+        state = info.get("state", {}) if isinstance(info, dict) else {}
+        if isinstance(state, dict):
+            user_data[key] = state
+
+    return DictPersistence(
+        user_data_json=json.dumps(user_data, ensure_ascii=False),
+        update_interval=0,
+    )
 
 # ======================================================
 # HELPER
@@ -3251,10 +3330,13 @@ def build_application():
     if not API_KEY:
         raise RuntimeError("SEKALIPAY_API_KEY belum diatur.")
 
+    persistence = _persistence_from_db()
+
     app = (
         Application
         .builder()
         .token(BOT_TOKEN)
+        .persistence(persistence)
         .concurrent_updates(False)
         .build()
     )
@@ -3300,30 +3382,37 @@ async def process_single_update(app, update_dict):
     from telegram import Update as TgUpdate
 
     uid = _update_user_id(update_dict)
-
-    if uid is not None:
-        db = get_db()
-        if str(uid) in db:
-            saved_state = db[str(uid)].get("state", {})
-            app.user_data[uid].clear()
-            if isinstance(saved_state, dict):
-                app.user_data[uid].update(saved_state)
-
     update = TgUpdate.de_json(update_dict, app.bot)
     await app.process_update(update)
 
-    # Persist conversation state after the handler has finished.
     if uid is not None:
         db = get_db()
-        if str(uid) in db:
-            db[str(uid)]["state"] = dict(app.user_data.get(uid, {}))
+        uid_key = str(uid)
+        if uid_key in db:
+            state = dict(app.user_data.get(uid, {}))
+            db[uid_key]["state"] = state
             save_db(db)
+
 
 
 async def poll_once():
     import requests as _requests
 
     offset = get_poll_offset()
+
+    # This project intentionally uses getUpdates polling, not Telegram webhook mode.
+    # Removing an old webhook prevents Telegram HTTP 409 conflicts.
+    delete_url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
+    delete_response = await asyncio.to_thread(
+        _requests.post,
+        delete_url,
+        json={"drop_pending_updates": False},
+        timeout=10,
+    )
+    delete_payload = delete_response.json()
+    if not delete_payload.get("ok"):
+        raise RuntimeError(f"Telegram deleteWebhook gagal: {delete_payload}")
+
     params = {
         "offset": offset,
         "limit": 25,
@@ -3354,6 +3443,13 @@ async def poll_once():
 
     app = build_application()
     await app.initialize()
+
+    # JSON object keys are strings. PTB user_data keys are Telegram user IDs (ints).
+    # Normalize restored Sheets state before processing updates.
+    for key in list(app.user_data.keys()):
+        if isinstance(key, str) and key.isdigit():
+            value = app.user_data.pop(key)
+            app.user_data[int(key)] = value
 
     processed = 0
     current_offset = offset

@@ -2,5 +2,7 @@
 .env.*
 !.env.example
 __pycache__/
-*.pyc
-.vercel/
+*.py[cod]
+.venv/
+venv/
+.DS_Store
