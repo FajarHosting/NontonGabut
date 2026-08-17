@@ -1,79 +1,72 @@
-# Sekalipay Telegram Gateway — Vercel Serverless
+# Sekalipay Telegram Bot — GitHub + Vercel, tanpa VPS & tanpa Telegram webhook
 
-Versi ini tidak memakai `app.run()` dan tidak memakai Telegram polling.
-Telegram mengirim update ke:
+Versi ini mempertahankan handler bisnis dari `otp.py`, tetapi mengganti:
 
-`POST /api/telegram`
+- `app.run_polling()` -> endpoint Vercel `/api/poll`
+- `users.json` -> Google Sheets
+- polling otomatis -> GitHub Actions setiap 5 menit
+- tidak memakai Telegram webhook
+- tidak membutuhkan device/VPS yang hidup 24/7
 
-Sekalipay mengirim webhook ke:
+## Penting
 
-`POST /api/sekalipay`
+Google Sheets **tidak bisa ditulis hanya dengan link spreadsheet**.
+Untuk operasi tulis, Google API membutuhkan OAuth. Versi ini sengaja **tidak memakai service-account JSON**.
 
-Data user, session, topup, transaksi, dan log webhook disimpan di Google Sheets.
+Environment yang diperlukan:
+
+- `TELEGRAM_BOT_TOKEN`
+- `SEKALIPAY_API_KEY`
+- `GOOGLE_SHEET_URL`
+- `GOOGLE_CLIENT_ID`
+- `GOOGLE_CLIENT_SECRET`
+- `GOOGLE_REFRESH_TOKEN`
+- `CRON_SECRET`
 
 ## Struktur
 
-- `api/index.py` — server Flask/serverless utama
-- `vercel.json` — routing Vercel
-- `requirements.txt` — dependency
-- `.env.example` — contoh Environment Variables
+```text
+.
+├── api/
+│   └── poll.py
+├── bot.py
+├── sheets_db.py
+├── requirements.txt
+├── vercel.json
+├── .env.example
+└── .github/
+    └── workflows/
+        └── poll.yml
+```
 
-## Deploy
+## Deployment
 
-1. Push semua file ke GitHub.
-2. Import repository ke Vercel.
-3. Di Vercel buka **Project Settings → Environment Variables**.
-4. Masukkan semua variable dari `.env.example`.
-5. Jangan upload `.env` ke GitHub.
-6. Deploy ulang setelah Environment Variables tersimpan.
+1. Upload semua file ke GitHub.
+2. Import repository tersebut ke Vercel.
+3. Masukkan environment variables di Vercel.
+4. Deploy.
+5. Di GitHub repository, buka Settings -> Secrets and variables -> Actions.
+6. Buat:
+   - `VERCEL_POLL_URL` = `https://DOMAIN-VERCEL/api/poll`
+   - `CRON_SECRET` = nilai yang sama dengan environment Vercel.
+7. Aktifkan GitHub Actions.
+8. Jalankan workflow `Telegram Bot Poller` sekali secara manual untuk tes.
 
 ## Google Sheets
 
-Buat satu spreadsheet lalu share spreadsheet tersebut ke `client_email`
-dari Google Service Account sebagai Editor.
+Buat spreadsheet dan biarkan tab `Users` dan `Meta` dibuat otomatis oleh aplikasi.
+Akun Google yang dipakai OAuth harus punya akses edit ke spreadsheet tersebut.
 
-`GOOGLE_SHEET_ID` boleh berupa ID spreadsheet atau URL spreadsheet.
-`GOOGLE_SERVICE_ACCOUNT_JSON` harus JSON service account lengkap, bukan hanya
-`{"type":"service_account"}`.
+Tab `Users` memakai kolom:
 
-## Aktifkan Telegram webhook
+`user_id | name | saldo | pending_topup_json | state_json | updated_at | version`
 
-Setelah deploy, buka:
+Tab `Meta` menyimpan offset Telegram.
 
-`https://DOMAIN-KAMU.vercel.app/api/setup?key=SETUP_KEY`
+## Catatan realtime
 
-Endpoint tersebut akan:
-- membuat sheet yang diperlukan jika belum ada
-- memasang Telegram webhook
-- menggunakan `TELEGRAM_WEBHOOK_SECRET` jika diisi
+Karena user meminta TANPA webhook, Telegram update diambil memakai `getUpdates`.
+GitHub Actions adalah scheduler yang memanggil endpoint Vercel.
 
-Cek webhook:
-
-`https://DOMAIN-KAMU.vercel.app/api/webhook-info?key=SETUP_KEY`
-
-## Sekalipay webhook
-
-Set URL webhook Sekalipay ke:
-
-`https://DOMAIN-KAMU.vercel.app/api/sekalipay`
-
-Signature divalidasi memakai `SEKALIPAY_WEBHOOK_SECRET`.
-
-## Panel admin
-
-Tidak memakai HTTP Basic Auth, jadi tidak akan muncul popup browser
-"Nama pengguna dan sandi".
-
-Akses:
-
-`https://DOMAIN-KAMU.vercel.app/panel?key=ADMIN_PANEL_KEY`
-
-## Catatan penting
-
-Vercel bukan VPS yang menjalankan proses Python terus-menerus. Pada arsitektur
-ini Vercel menjalankan fungsi Python ketika ada request/webhook. Karena bot
-menggunakan webhook, tidak perlu VPS dan tidak perlu `run_polling()`.
-
-Untuk trafik besar, Google Sheets bisa menjadi bottleneck karena setiap request
-membaca/menulis spreadsheet. Untuk penggunaan kecil/menengah model ini cocok
-sebagai pengganti VPS sederhana.
+GitHub menjadwalkan workflow paling cepat setiap 5 menit, sehingga bot ini bukan realtime per detik.
+Untuk respons benar-benar instan, Telegram webhook adalah arsitektur yang lebih tepat.
