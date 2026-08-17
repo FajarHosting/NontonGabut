@@ -1,0 +1,31 @@
+name: Telegram Bot Poller
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+
+concurrency:
+  group: telegram-bot-poller
+  cancel-in-progress: false
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Poll Vercel bot
+        env:
+          VERCEL_POLL_URL: ${{ secrets.VERCEL_POLL_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          set -euo pipefail
+
+          test -n "$VERCEL_POLL_URL"
+          test -n "$CRON_SECRET"
+
+          curl --fail-with-body \
+            --silent \
+            --show-error \
+            --max-time 45 \
+            -H "Authorization: Bearer ${CRON_SECRET}" \
+            "${VERCEL_POLL_URL}"
