@@ -1,58 +1,70 @@
-# Sekalipay Telegram Bot — Vercel + Google Sheets
+# Sekalipay Telegram Bot — Vercel Webhook + Google Sheets
+
+Versi ini memakai **Telegram Webhook**, bukan `getUpdates` polling. Telegram akan mengirim setiap `/start`, pesan, dan callback button langsung ke `POST /api/telegram`. Telegram memang menyediakan dua mode yang saling eksklusif: `getUpdates` atau webhook; untuk Vercel serverless, webhook adalah pilihan yang tepat.
 
 ## Struktur
 
-- `app.py` — Flask entrypoint Vercel.
-- `bot.py` — seluruh handler Telegram, katalog, topup, order, saldo, dan polling.
-- `sheets_db.py` — penyimpanan user/state/offset di Google Sheets via OAuth refresh token.
-- `poll.py` — endpoint aman untuk menjalankan satu batch `getUpdates`.
-- `.github/workflows/poll.yml` — pemicu polling setiap 5 menit dari GitHub Actions.
-- `vercel.json` — hanya mengatur max duration; tidak memakai Vercel Cron.
+- `api/index.py` — entrypoint Flask untuk Vercel.
+- `app.py` — route webhook Telegram, setup webhook, health check, dan endpoint Sekalipay.
+- `bot.py` — katalog produk, saldo, topup, order, dan handler Telegram.
+- `sheets_db.py` — penyimpanan user/state di Google Sheets.
+- `requirements.txt` — dependency Python.
+- `vercel.json` — konfigurasi function Vercel.
 
-## Kenapa tidak Vercel Cron?
+## Environment Variables
 
-Polling Telegram membutuhkan frekuensi lebih sering daripada cron harian. Pada Hobby, Vercel Cron dibatasi sehingga workflow GitHub Actions dipakai sebagai scheduler eksternal.
-
-## Environment Variables Vercel
+Wajib:
 
 ```text
 TELEGRAM_BOT_TOKEN=...
+TELEGRAM_WEBHOOK_SECRET=...
+SETUP_KEY=...
 SEKALIPAY_API_KEY=...
-CRON_SECRET=...
 GOOGLE_SHEET_ID=...
 GOOGLE_CLIENT_ID=...
 GOOGLE_CLIENT_SECRET=...
 GOOGLE_REFRESH_TOKEN=...
+```
+
+Opsional:
+
+```text
+PUBLIC_BASE_URL=https://nama-project.vercel.app
 GOOGLE_SHEET_TAB=Users
 GOOGLE_META_TAB=Meta
 MIN_TOPUP=500
 DASHBOARD_IMG=https://...
 ```
 
-`GOOGLE_SHEET_URL` boleh dipakai sebagai pengganti `GOOGLE_SHEET_ID`.
+Jangan commit `.env`.
 
-## GitHub Actions Secrets
+## Deploy
 
-Tambahkan:
+1. Hapus `pyproject.toml` lama jika isinya tidak memiliki `[project]`. Dependency project ini cukup memakai `requirements.txt`.
+2. Push seluruh file ke GitHub.
+3. Import repository ke Vercel.
+4. Masukkan Environment Variables di Vercel.
+5. Deploy ulang.
+6. Buka `/api/setup?key=SETUP_KEY`.
+7. Buka `/api/webhook-info?key=SETUP_KEY` dan pastikan `url` menunjuk ke `/api/telegram`.
+8. Kirim `/start` ke bot.
 
-```text
-VERCEL_POLL_URL=https://<domain-vercel-kamu>/api/poll
-CRON_SECRET=<nilai-yang-sama-dengan-Vercel>
-```
+## URL webhook
 
-Workflow bisa dijalankan manual dari tab **Actions** untuk test pertama.
+Telegram webhook: `https://DOMAIN.vercel.app/api/telegram`
 
-## Test setelah deploy
+Sekalipay webhook: `https://DOMAIN.vercel.app/api/sekalipay`
 
-1. Buka `/` → harus mendapat JSON `ok: true`.
-2. Buka `/health` → harus menunjukkan konfigurasi Telegram/Sekalipay/Sheets.
-3. Jalankan workflow **Poll Telegram Bot** secara manual.
-4. Cek response `/api/poll`.
-5. Kirim `/start` ke bot Telegram.
+## Catatan jualan produk digital
 
-Jangan commit `.env` atau secret ke GitHub.
+Alur yang dipertahankan dari bot:
 
+1. User daftar.
+2. User top up saldo melalui channel pembayaran Sekalipay.
+3. Bot mengecek status pembayaran.
+4. User memilih produk/variant.
+5. Bot melakukan transaksi melalui API Sekalipay menggunakan `SEKALIPAY_API_KEY`.
+6. Webhook Sekalipay menangani status order dan item/license.
+7. Data user, saldo, state, dan transaksi disimpan di Google Sheets sesuai kode yang tersedia.
 
-## Vercel deployment
-
-This project intentionally uses `api/index.py` as the Vercel Flask entrypoint. Python dependencies are installed from `requirements.txt`; there is no `pyproject.toml` so Vercel does not invoke uv project locking. The entrypoint imports the Flask object from the root `app.py`.
+Vercel tidak menjalankan proses Python terus-menerus; function dipanggil ketika ada HTTP request.

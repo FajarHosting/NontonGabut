@@ -82,8 +82,6 @@ HEADERS = {
 from sheets_db import (
     get_db,
     save_db,
-    get_poll_offset,
-    set_poll_offset,
 )
 
 
@@ -2564,9 +2562,9 @@ async def handle_text(
         # REF
         # ==================================================
 
-        ref = generate_ref(
-            "TUP"
-        )
+        # Deterministic ref per Telegram update prevents duplicate invoices
+        # if Telegram retries the same webhook delivery.
+        ref = f"TUP-TG-{update.update_id}"
 
 
         # ==================================================
@@ -3046,9 +3044,9 @@ async def handle_text(
 
             note = target
 
-        ref = generate_ref(
-            "TRX"
-        )
+        # Deterministic ref per Telegram update prevents duplicate orders
+        # if Telegram retries the same webhook delivery.
+        ref = f"TRX-TG-{update.update_id}"
 
         payload = {
 
@@ -3395,90 +3393,10 @@ async def process_single_update(app, update_dict):
 
 
 
-async def poll_once():
-    import requests as _requests
-
-    offset = get_poll_offset()
-
-    # This project intentionally uses getUpdates polling, not Telegram webhook mode.
-    # Removing an old webhook prevents Telegram HTTP 409 conflicts.
-    delete_url = f"https://api.telegram.org/bot{BOT_TOKEN}/deleteWebhook"
-    delete_response = await asyncio.to_thread(
-        _requests.post,
-        delete_url,
-        json={"drop_pending_updates": False},
-        timeout=10,
-    )
-    delete_payload = delete_response.json()
-    if not delete_payload.get("ok"):
-        raise RuntimeError(f"Telegram deleteWebhook gagal: {delete_payload}")
-
-    params = {
-        "offset": offset,
-        "limit": 25,
-        "timeout": 0,
-        "allowed_updates": json.dumps(
-            ["message", "callback_query"]
-        ),
-    }
-
-    url = f"https://api.telegram.org/bot{BOT_TOKEN}/getUpdates"
-    response = await asyncio.to_thread(
-        _requests.get,
-        url,
-        params=params,
-        timeout=15,
-    )
-    response.raise_for_status()
-    payload = response.json()
-
-    if not payload.get("ok"):
-        raise RuntimeError(
-            f"Telegram getUpdates gagal: {payload}"
-        )
-
-    updates = payload.get("result", [])
-    if not updates:
-        return {"ok": True, "processed": 0, "offset": offset}
-
-    app = build_application()
-    await app.initialize()
-
-    # JSON object keys are strings. PTB user_data keys are Telegram user IDs (ints).
-    # Normalize restored Sheets state before processing updates.
-    for key in list(app.user_data.keys()):
-        if isinstance(key, str) and key.isdigit():
-            value = app.user_data.pop(key)
-            app.user_data[int(key)] = value
-
-    processed = 0
-    current_offset = offset
-
-    try:
-        for item in updates:
-            update_id = int(item["update_id"])
-
-            # Do not acknowledge an update until its handler completes.
-            await process_single_update(app, item)
-
-            current_offset = update_id + 1
-            set_poll_offset(current_offset)
-            processed += 1
-    finally:
-        await app.shutdown()
-
-    return {
-        "ok": True,
-        "processed": processed,
-        "offset": current_offset,
-    }
-
-
 def main():
-    # Local fallback only. Production uses /api/poll.
     raise RuntimeError(
-        "Bot ini dirancang untuk Vercel + GitHub Actions. "
-        "Jalankan endpoint /api/poll, bukan run_polling()."
+        "Bot ini dirancang untuk Vercel webhook. "
+        "Gunakan endpoint /api/telegram, bukan run_polling()."
     )
 
 
