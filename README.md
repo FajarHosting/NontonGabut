@@ -51,3 +51,8 @@ Workflow bisa dijalankan manual dari tab **Actions** untuk test pertama.
 5. Kirim `/start` ke bot Telegram.
 
 Jangan commit `.env` atau secret ke GitHub.
+
+
+## Vercel deployment
+
+This project intentionally uses `api/index.py` as the Vercel Flask entrypoint. Python dependencies are installed from `requirements.txt`; there is no `pyproject.toml` so Vercel does not invoke uv project locking. The entrypoint imports the Flask object from the root `app.py`.
